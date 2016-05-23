@@ -251,36 +251,38 @@ std::unique_ptr<identifier_expression> parser::parse_identifier_expression(strin
 }
 
 namespace {
-	int get_precedence(string_view op, bool unary) {
-		if (unary) {
-			return 3;
-		} else {
-			if (!op.empty()) switch (op[0]) {
-				case '.': case '(': case '[':
-					return 1; // . ( [
-				case '*':
-					if (op.size() > 1 && op[1] == '*') return 4; // **
-				case '/': case '%':
-					return 5; // * / %
-				case '+': case '-':
-					return 6; // + -
-				case '<': case '>':
-					if (op.size() > 1 && op[1] == op[0]) return 7; // >> <<
-					return 8; // > < >= <=
-				case '=': case '!':
-					return 9; // != ==
-				case '&':
-					if (op.size() > 1 && op[1] == '&') return 13; // &&
-					return 10; // &
-				case '^':
-					return 11; // ^
-				case '|':
-					if (op.size() > 1 && op[1] == '|') return 14; // ||
-					return 12; // |
-			}
+
+int get_precedence(string_view op, bool unary) {
+	if (unary) {
+		return 3;
+	} else {
+		if (!op.empty()) switch (op[0]) {
+			case '.': case '(': case '[':
+				return 1; // . ( [
+			case '*':
+				if (op.size() > 1 && op[1] == '*') return 4; // **
+			case '/': case '%':
+				return 5; // * / %
+			case '+': case '-':
+				return 6; // + -
+			case '<': case '>':
+				if (op.size() > 1 && op[1] == op[0]) return 7; // >> <<
+				return 8; // > < >= <=
+			case '=': case '!':
+				return 9; // != ==
+			case '&':
+				if (op.size() > 1 && op[1] == '&') return 13; // &&
+				return 10; // &
+			case '^':
+				return 11; // ^
+			case '|':
+				if (op.size() > 1 && op[1] == '|') return 14; // ||
+				return 12; // |
 		}
-		throw std::logic_error("get_precedence");
 	}
+	throw std::logic_error("get_precedence");
+}
+
 }
 
 std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
