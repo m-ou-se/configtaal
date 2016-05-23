@@ -21,3 +21,9 @@ add_custom_target(check
 	DEPENDS configtaal-test
 	USES_TERMINAL
 )
+
+add_custom_target(update-tests
+	COMMAND "${CMAKE_SOURCE_DIR}/test/test" "--update-expected" "$<TARGET_FILE:configtaal-test>"
+	DEPENDS configtaal-test
+	USES_TERMINAL
+)
