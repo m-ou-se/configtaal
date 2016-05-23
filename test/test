@@ -1,0 +1,55 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <program>"
+	exit 1
+fi
+
+program="$(realpath "$1")"
+
+testdir="$(dirname "$0")"
+
+passed=0
+failed=0
+
+pass() {
+	echo -e "\r[\033[1;32mPASS\033[m]"
+	((passed++))
+}
+
+fail() {
+	echo -e "\r[\033[1;31mFAIL\033[m]"
+	((failed++))
+}
+
+set -e
+
+rm -rf test-output test-diff
+mkdir test-output test-diff
+ln -sfT "$testdir/tests" tests
+
+set +e
+
+for t in "tests"/*; do
+	t=${t##*/}
+	echo -n "[....] $t"
+	$program tests/$t &> "test-output/$t"
+	r=$?
+	if [ $r != 0 ]; then
+		fail
+		echo "Program exited with non-zero status code ($r)"
+	elif git --no-pager diff -U1 --color-words --no-index --exit-code "test-output/$t" "$testdir/expected/$t" > "test-diff/$t.diff"; then
+		pass
+	else
+		fail
+		tail -n+5 test-diff/$t.diff
+	fi
+done
+
+if [ $failed == 0 ]; then
+	echo -e "[\033[1;32mALL $passed TESTS PASSED\033[m]";
+	exit 0
+else
+	echo -e "[\033[1;31m$failed TEST(S) FAILED\033[m]";
+	exit 1
+fi
