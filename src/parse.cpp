@@ -165,6 +165,60 @@ string_view parser::parse_identifier(string_view & source) {
 	return original_source.substr(0, original_source.size() - source.size());
 }
 
+namespace {
+
+optional<int> hex_digit(char c) {
+	switch (c) {
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+			return c - '0';
+		case 'a': case 'A': return 10;
+		case 'b': case 'B': return 11;
+		case 'c': case 'C': return 12;
+		case 'd': case 'D': return 13;
+		case 'e': case 'E': return 14;
+		case 'f': case 'F': return 15;
+		default:
+			return nullopt;
+	}
+}
+
+int parse_hex_digit(string_view & s) {
+	if (!s.empty()) {
+		if (auto value = hex_digit(s[0])) {
+			s.remove_prefix(1);
+			return *value;
+		}
+	}
+	throw parse_error("expected hexadecimal digit (0-9, a-f, A-F)", s.substr(0, 0));
+}
+
+size_t encode_utf8(char32_t codepoint, char (& buffer)[4]) {
+	if (codepoint < 0x7F) {
+		buffer[0] = codepoint;
+		return 1;
+	} else if (codepoint < 0x7FF) {
+		buffer[0] = 0xC0 | codepoint >> 6;
+		buffer[1] = 0x80 | (codepoint & 0x3F);
+		return 2;
+	} else if (codepoint < 0xFFFF) {
+		buffer[0] = 0xE0 | codepoint >> 12;
+		buffer[1] = 0x80 | (codepoint >> 6 & 0x3F);
+		buffer[2] = 0x80 | (codepoint & 0x3F);
+		return 3;
+	} else if (codepoint < 0x1FFFFF) {
+		buffer[0] = 0xF0 | codepoint >> 18;
+		buffer[1] = 0x80 | (codepoint >> 12 & 0x3F);
+		buffer[2] = 0x80 | (codepoint >> 6 & 0x3F);
+		buffer[3] = 0x80 | (codepoint & 0x3F);
+		return 4;
+	} else {
+		return 0;
+	}
+}
+
+}
+
 std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 	auto const original_source = source_;
 
@@ -215,16 +269,57 @@ std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 				case '\n':
 					source_.remove_prefix(2);
 					break;
-				case 'x':
+				case 'x': {
 					// 8-bit byte in hex
+					auto escape_sequence = source_.substr(0, 4);
+					source_.remove_prefix(2);
+					int a = parse_hex_digit(source_);
+					int b = parse_hex_digit(source_);
+					char ch = a << 4 | b;
+					string_builder.append(string_view(&ch, 1), escape_sequence);
+					break;
+				}
 				case 'u':
-					// 16-bit unicode codepoint in hex
-				case 'U':
-					// 32-bit unicode codepoint in hex
+				case 'U': {
+					// 16-bit ('u') or 32-bit ('U') unicode codepoint in hex
+					int n_digits = source_[1] == 'u' ? 4 : 8;
+					auto escape_sequence = source_.substr(0, 2 + n_digits);
+					source_.remove_prefix(2);
+					char32_t codepoint = 0;
+					for (int i = 0; i < n_digits; ++i) {
+						codepoint <<= 4;
+						codepoint |= parse_hex_digit(source_);
+					}
+					char buffer[4];
+					if (size_t n_bytes = encode_utf8(codepoint, buffer)) {
+						string_builder.append(string_view(buffer, n_bytes), escape_sequence);
+					} else {
+						throw parse_error(
+							"invalid unicode codepoint",
+							escape_sequence
+						);
+					}
+					break;
+				}
 				case '0': case '1': case '2': case '3':
-				case '4': case '5': case '6': case '7':
-					// octal
-					throw parse_error("escape sequences not yet implemented", source_.substr(0, 2)); // TODO
+				case '4': case '5': case '6': case '7': {
+					// 8-bit byte in octal (1-3 digits)
+					auto escape_sequence_start = source_.data();
+					int value = source_[1] - '0';
+					source_.remove_prefix(2);
+					int n_digits = 1;
+					while (n_digits < 3 && !source_.empty() && source_[0] >= '0' && source_[0] <= '7') {
+						value <<= 3;
+						value |= source_[0] - '0';
+						++n_digits;
+						source_.remove_prefix(1);
+					}
+					string_view escape_sequence(escape_sequence_start, source_.data() - escape_sequence_start);
+					if (value > 255) throw parse_error("octal escape sequence out of range", escape_sequence);
+					char ch = value;
+					string_builder.append(string_view(&ch, 1), escape_sequence);
+					break;
+				}
 				default:
 					throw parse_error("invalid escape sequence", source_.substr(0, 2));
 			}
