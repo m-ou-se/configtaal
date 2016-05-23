@@ -1,0 +1,8 @@
+{
+	hello = world + test
+	test = foo * bar + (
+		hello + world
+	)
+	test2 = func(
+		a, b, c) + i
+}

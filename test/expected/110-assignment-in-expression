@@ -1,0 +1,3 @@
+tests/110-assignment-in-expression:2:12: error: assignment (`=') cannot be used in expressions (did you mean `=='?)
+        foo = bar = baz
+                  ^     

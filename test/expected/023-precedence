@@ -1,0 +1,1 @@
+(& (- (+ (+ (ref a) (* (ref b) (** (ref d) (( (ref c) (list (+ (* (** (ref foo) (ref e)) (ref bar)) (ref quux))))))) (~ (ref hello))) (- (! (! (ref world))))) (+ (ref test) (ref foobar)))

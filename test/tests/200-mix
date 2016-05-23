@@ -1,0 +1,7 @@
+{
+	hello = [a, b, c]
+	world = hello[index] + hello[index2]
+	foo = (
+		((bar + a) * b) ** c)
+	test = a > b
+}

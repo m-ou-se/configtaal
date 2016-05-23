@@ -1,0 +1,6 @@
+tests/112-incomplete-parens-2:3:1: error: expected `)'
+<end of file>
+^
+tests/112-incomplete-parens-2:2:8: ... to match this `('
+        foo = (bar
+              ^    

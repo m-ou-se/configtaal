@@ -1,0 +1,3 @@
+tests/110-incomplete-binary-op:1:5: error: missing expression after `+' operator
+foo +
+    ^^
