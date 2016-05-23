@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.1)
+
+project(configtaal VERSION 1.0)
+
+include_directories(../stringpool)
+
+set(CMAKE_CXX_STANDARD 14)
+
+if (CMAKE_COMPILER_IS_GNUCXX)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-sign-compare")
+endif()
+
+add_executable(configtaal-test
+	../stringpool/string_tracker.cpp
+	src/parse.cpp
+	src/test.cpp
+)
+
+add_custom_target(check
+	COMMAND "${CMAKE_SOURCE_DIR}/test/test" "$<TARGET_FILE:configtaal-test>"
+	DEPENDS configtaal-test
+	USES_TERMINAL
+)
