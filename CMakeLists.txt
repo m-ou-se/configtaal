@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 
 project(configtaal VERSION 1.0)
 
-include_directories(../stringpool)
+include_directories(third-party/stringpool)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -11,7 +11,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 add_executable(configtaal-test
-	../stringpool/string_tracker.cpp
+	third-party/stringpool/string_tracker.cpp
 	src/parse.cpp
 	src/test.cpp
 )
