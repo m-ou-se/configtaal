@@ -100,9 +100,14 @@ public:
 		return m;
 	}
 
+	// Life time of the 'or before' matcher must be at least as long as
+	// the life time of this matcher.
 	matcher or_before(matcher const & alt) {
 		return matcher(mode_, expected_, matching_bracket_, &alt);
 	}
+
+	// Prevent taking temporaries.
+	matcher or_before(matcher const &&) = delete;
 
 	std::string description() const {
 		std::string desc;
