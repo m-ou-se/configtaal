@@ -1,0 +1,3 @@
+tests/110-incomplete-escape-sequence:2:14: error: incomplete escape sequence
+        foo = "hello\
+                    ^ 

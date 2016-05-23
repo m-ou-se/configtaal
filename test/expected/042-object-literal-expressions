@@ -1,0 +1,1 @@
+(object hello=(+ (ref world) (ref test)) test=(+ (* (ref foo) (ref bar)) (+ (ref hello) (ref world))) test2=(+ (( (ref func) (list (ref a) (ref b) (ref c))) (ref i)))

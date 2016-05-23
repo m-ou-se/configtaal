@@ -1,0 +1,1 @@
+(object foo=(ref bar) baz=(ref hello) world=(ref pizza) pizza=(ref test))

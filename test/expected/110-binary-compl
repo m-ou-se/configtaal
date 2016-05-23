@@ -1,0 +1,3 @@
+tests/110-binary-compl:1:5: error: `~' can only be used as unary operator
+foo ~ bar
+    ^     
