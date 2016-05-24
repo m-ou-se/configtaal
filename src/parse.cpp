@@ -532,7 +532,7 @@ std::unique_ptr<expression> parser::parse_expression(matcher const & end) {
 }
 
 std::unique_ptr<object_literal_expression> parser::parse_object(matcher const & end) {
-	std::vector<std::pair<string_view, std::unique_ptr<expression>>> values;
+	std::vector<std::pair<std::unique_ptr<expression> , std::unique_ptr<expression>>> values;
 	while (true) {
 		if (parse_end(end)) break;
 		auto name = parse_identifier(source_);
@@ -543,7 +543,7 @@ std::unique_ptr<object_literal_expression> parser::parse_object(matcher const & 
 			"missing expression after `='",
 			string_view(eq.data(), source_.data() - eq.data() + 1)
 		);
-		values.emplace_back(name, std::move(value));
+		values.emplace_back(std::make_unique<string_literal_expression>(name), std::move(value));
 	}
 	return std::make_unique<object_literal_expression>(std::move(values));
 }

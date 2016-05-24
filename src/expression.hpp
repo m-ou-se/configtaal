@@ -53,19 +53,19 @@ public:
 class object_literal_expression final : public literal_expression {
 public:
 	explicit object_literal_expression(
-		std::vector<std::pair<string_view, std::unique_ptr<expression>>> values
-	) : values(std::move(values)) {}
+		std::vector<std::pair<std::unique_ptr<expression>, std::unique_ptr<expression>>> elements
+	) : elements(std::move(elements)) {}
 
-	std::vector<std::pair<string_view, std::unique_ptr<expression>>> values;
+	std::vector<std::pair<std::unique_ptr<expression>, std::unique_ptr<expression>>> elements;
 };
 
 class list_literal_expression final : public literal_expression {
 public:
 	explicit list_literal_expression(
-		std::vector<std::unique_ptr<expression>> values
-	) : values(std::move(values)) {}
+		std::vector<std::unique_ptr<expression>> elements
+	) : elements(std::move(elements)) {}
 
-	std::vector<std::unique_ptr<expression>> values;
+	std::vector<std::unique_ptr<expression>> elements;
 };
 
 }
