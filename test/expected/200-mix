@@ -1,1 +1,1 @@
-(object "hello"=(list (ref a) (ref b) (ref c)) "world"=(+ ([ (ref hello) (list (ref index))) ([ (ref hello) (list (ref index2)))) "foo"=(** (* (+ (ref bar) (ref a)) (ref b)) (ref c)) "test"=(> (ref a) (ref b)))
+(object "hello"=(list (ref a) (ref b) (ref c)) "world"=(+ ([ (ref hello) (list (ref index))) ([ (ref hello) (list (ref index2)))) "foo"=(** (* (+ (ref bar) (ref a)) (ref b)) (ref c)) "test"=(> (ref a) (+ (** (ref b) (** 3 1365)) 83)))

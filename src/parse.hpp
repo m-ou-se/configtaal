@@ -56,6 +56,7 @@ private:
 	bool parse_more_expression(std::unique_ptr<expression> & expr, matcher const & end);
 
 	std::unique_ptr<string_literal_expression> parse_string_literal();
+	std::unique_ptr<expression> parse_number();
 
 	optional<string_view> parse_end(matcher const &, bool consume = true);
 

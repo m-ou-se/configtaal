@@ -34,6 +34,8 @@ std::ostream & operator << (std::ostream & out, expression const & expr) {
 		out << ')';
 	} else if (auto e = dynamic_cast<string_literal_expression const *>(&expr)) {
 		out << std::quoted(std::string(e->value));
+	} else if (auto e = dynamic_cast<integer_literal_expression const *>(&expr)) {
+		out << e->value;
 	} else {
 		out << "???";
 	}
