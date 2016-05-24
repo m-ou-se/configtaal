@@ -50,7 +50,7 @@ public:
 	matcher(match_mode mode, string_view expected = {}, string_view matching_bracket = {}, matcher const * or_before = nullptr)
 		: mode_(mode), expected_(expected), matching_bracket_(matching_bracket), or_before_(or_before) {}
 
-	optional<string_view> try_match(string_view & source, bool eat_whitespace = true) const {
+	optional<string_view> try_parse(string_view & source, bool consume = true, bool eat_whitespace = true) const {
 		if (eat_whitespace) {
 			bool skip_newlines = mode_ != match_mode::object_element;
 			skip_whitespace(source, skip_newlines);
@@ -62,42 +62,33 @@ public:
 			case match_mode::specific:
 			case match_mode::matching_bracket: {
 				auto s = source.substr(0, expected_.size());
-				if (s == expected_) return s;
+				if (s == expected_) {
+					if (consume) source.remove_prefix(expected_.size());
+					return s;
+				}
 				break;
 			}
 			case match_mode::object_element:
 				if (!source.empty()) switch (source[0]) {
-					case ',': case ';': case '\n':
-						return source.substr(0, 1);
+					case ',': case ';': case '\n': {
+						auto match = source.substr(0, 1);
+						if (consume) source.remove_prefix(1);
+						return match;
+					}
 				}
 				break;
 		}
 		if (or_before_) {
-			auto m = or_before_->try_match(source, false);
+			auto m = or_before_->try_parse(source, false, false);
 			if (m) return m->substr(0, 0);
 		}
 		return nullopt;
 	}
 
-	string_view match(string_view source) const {
-		auto m = try_match(source);
-		if (m) {
-			return *m;
-		} else {
-			throw error(source);
-		}
-	}
-
-	optional<string_view> try_parse(string_view & source) const {
-		auto m = try_match(source);
-		if (m) source.remove_prefix(m->data() + m->size() - source.data());
-		return m;
-	}
-
-	string_view parse(string_view & source) const {
-		auto m = match(source);
-		source.remove_prefix(m.data() + m.size() - source.data());
-		return m;
+	string_view parse(string_view & source, bool consume = true) const {
+		auto m = try_parse(source, consume);
+		if (!m) throw error(source);
+		return *m;
 	}
 
 	// Life time of the 'or before' matcher must be at least as long as
@@ -145,8 +136,8 @@ public:
 
 matcher match_end_of_file = conftaal::match_mode::end_of_file;
 
-optional<string_view> parser::parse_end(matcher const & end) {
-	auto m = end.try_parse(source_);
+optional<string_view> parser::parse_end(matcher const & end, bool consume) {
+	auto m = end.try_parse(source_, consume);
 	if (!m && source_.empty()) {
 		throw end.error(source_);
 	}
@@ -381,7 +372,7 @@ int get_precedence(string_view op, bool unary) {
 }
 
 std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
-	if (end.try_match(source_) || source_.empty()) return nullptr;
+	if (parse_end(end, false)) return nullptr;
 
 	if (source_[0] == '(') {
 		auto open = source_.substr(0, 1);
