@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -40,6 +41,20 @@ public:
 class literal_expression : public expression {
 public:
 	literal_expression() {}
+};
+
+class integer_literal_expression final : public literal_expression {
+public:
+	explicit integer_literal_expression(std::int64_t value) : value(value) {}
+
+	std::int64_t value;
+};
+
+class double_literal_expression final : public literal_expression {
+public:
+	explicit double_literal_expression(double value) : value(value) {}
+
+	double value;
 };
 
 class string_literal_expression final : public literal_expression {

@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cctype>
+#include <limits>
 #include <stdexcept>
 
 #include <string_view.hpp>
@@ -158,7 +159,7 @@ string_view parser::parse_identifier(string_view & source) {
 
 namespace {
 
-optional<int> hex_digit(char c) {
+int digit_value(char c) {
 	switch (c) {
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
@@ -170,15 +171,16 @@ optional<int> hex_digit(char c) {
 		case 'e': case 'E': return 14;
 		case 'f': case 'F': return 15;
 		default:
-			return nullopt;
+			return -1;
 	}
 }
 
 int parse_hex_digit(string_view & s) {
 	if (!s.empty()) {
-		if (auto value = hex_digit(s[0])) {
+		int value = digit_value(s[0]);
+		if (value != -1) {
 			s.remove_prefix(1);
-			return *value;
+			return value;
 		}
 	}
 	throw parse_error("expected hexadecimal digit (0-9, a-f, A-F)", s.substr(0, 0));
@@ -327,6 +329,78 @@ std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 	return std::make_unique<string_literal_expression>(value);
 }
 
+std::unique_ptr<expression> parser::parse_number() {
+
+	char const * source_begin = source_.data();
+
+	constexpr string_view decimal_digits("0123456789", 10);
+
+	int base = 10;
+	string_view digits = decimal_digits;
+
+	if (source_[0] == '0' && source_.size() >= 2) {
+		if (source_[1] == 'x' || source_[1] == 'X') {
+			base = 16;
+			digits = "0123456789abcdefABCDEF";
+			source_.remove_prefix(2);
+		} else if (source_[1] == 'o' || source_[1] == 'O') {
+			base = 8;
+			digits = "012345678";
+			source_.remove_prefix(2);
+		}
+	}
+
+	bool is_integer = true;
+	string_view integer_part;
+	string_view fractional_part;
+	char const * exponent_sign = nullptr;
+	string_view exponent_part;
+
+	integer_part = source_.substr(0, source_.find_first_not_of(digits));
+	source_.remove_prefix(integer_part.size());
+
+	if (!source_.empty() && source_[0] == '.') {
+		is_integer = false;
+		source_.remove_prefix(1);
+		fractional_part = source_.substr(0, source_.find_first_not_of(digits));
+		source_.remove_prefix(integer_part.size());
+	}
+
+	if (!source_.empty() && (source_[0] == (base == 16 ? 'p' : 'e') || source_[0] == (base == 16 ? 'P' : 'E'))) {
+		is_integer = false;
+		source_.remove_prefix(1);
+		source_.remove_prefix(1);
+		if (!source_.empty() && (source_[0] == '+' || source_[0] == '-')) {
+			exponent_sign = source_.data();
+			source_.remove_prefix(1);
+		}
+		exponent_part = source_.substr(0, source_.find_first_not_of(decimal_digits));
+		if (exponent_part.empty()) throw parse_error("missing exponent", exponent_part);
+		source_.remove_prefix(integer_part.size());
+	}
+
+	string_view literal_source(source_begin, source_.data() - source_begin);
+
+	if (is_integer) {
+		uint64_t value = 0;
+		for (char c : integer_part) {
+			uint64_t v = value * base + digit_value(c);
+			if (v < value || v > uint64_t(std::numeric_limits<int64_t>::max())) {
+				throw parse_error("constant too large for 64-bit signed integer", literal_source);
+			} else {
+				value = v;
+			}
+		}
+		return std::make_unique<integer_literal_expression>(int64_t(value));
+	} else {
+		(void) fractional_part;
+		(void) exponent_sign;
+		(void) exponent_part;
+		throw parse_error("floating point literals are not yet implemented", literal_source);
+	}
+
+}
+
 std::unique_ptr<identifier_expression> parser::parse_identifier_expression(string_view & source) {
 	auto identifier = parse_identifier(source);
 	if (!identifier.empty()) {
@@ -430,6 +504,9 @@ std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
 
 	} else if (source_[0] == '"') {
 		return parse_string_literal();
+
+	} else if (std::isdigit(source_[0]) || (source_.size() > 1 && source_[0] == '.' && std::isdigit(source_[1]))) {
+		return parse_number();
 
 	} else if (source_[0] == '\\') {
 		throw parse_error("lambdas are not yet implemented", source_.substr(0, 1));
