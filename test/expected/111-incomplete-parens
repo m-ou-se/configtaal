@@ -1,6 +1,0 @@
-tests/111-incomplete-parens:2:1: error: expected `)'
-<end of file>
-^
-tests/111-incomplete-parens:1:1: ... to match this `('
-(a
-^  
