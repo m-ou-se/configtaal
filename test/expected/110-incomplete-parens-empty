@@ -1,0 +1,6 @@
+tests/110-incomplete-parens-empty:2:1: error: expected `)'
+<end of file>
+^
+tests/110-incomplete-parens-empty:1:1: ... to match this `('
+(
+^ 

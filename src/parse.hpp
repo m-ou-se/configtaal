@@ -55,7 +55,7 @@ private:
 
 	std::unique_ptr<string_literal_expression> parse_string_literal();
 
-	optional<string_view> parse_end(matcher const &);
+	optional<string_view> parse_end(matcher const &, bool consume = true);
 
 private:
 	string_tracker & string_tracker_;
