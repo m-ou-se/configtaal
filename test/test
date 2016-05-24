@@ -30,6 +30,8 @@ fail() {
 	((failed++))
 }
 
+diff='git -c color.diff.old=green -c color.diff.new=red --no-pager diff -U1 --no-index --color --exit-code'
+
 set -e
 
 rm -rf test-output test-diff
@@ -41,23 +43,22 @@ set +e
 for t in "tests"/*; do
 	t=${t##*/}
 	echo -n "[....] $t"
-	if [ $update == 0 -a ! -f "$testdir/expected/$t" ]; then
-		echo -e "\r[\033[1;34m????\033[m] $t - not run - expected output unavailable"
+	$program tests/$t &> "test-output/$t"
+	r=$?
+	if [ $r != 0 ]; then
+		fail
+		echo "Program exited with non-zero status code ($r)"
+	elif [ $update == 1 ]; then
+		pass
+		cp "test-output/$t" "$testdir/expected/$t"
+	elif [ ! -f "$testdir/expected/$t" ]; then
+		echo -e "\r[\033[1;34m????\033[m] $t - no expected output available, got:"
+		cat "test-output/$t"
+	elif $diff "$testdir/expected/$t" "test-output/$t" > "test-diff/$t.diff"; then
+		pass
 	else
-		$program tests/$t &> "test-output/$t"
-		r=$?
-		if [ $r != 0 ]; then
-			fail
-			echo "Program exited with non-zero status code ($r)"
-		elif [ $update == 1 ]; then
-			pass
-			cp "test-output/$t" "$testdir/expected/$t"
-		elif git --no-pager diff -U1 --no-index --color --exit-code "test-output/$t" "$testdir/expected/$t" > "test-diff/$t.diff"; then
-			pass
-		else
-			fail
-			tail -n+5 test-diff/$t.diff
-		fi
+		fail
+		tail -n+5 test-diff/$t.diff
 	fi
 done
 
