@@ -600,7 +600,7 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 				if (precedence_a == precedence_b) {
 					auto assoc = get_associativity(precedence_a);
 					if (assoc == associativity::none) {
-						if (op == e->op ) {
+						if (op == e->op) {
 							throw parse_error(
 								"operator `" + std::string(e->op) + "' is non-associative", e->op,
 								{{"conflicting `" + std::string(op) + "' here", op}}
