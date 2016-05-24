@@ -369,6 +369,24 @@ int get_precedence(string_view op, bool unary) {
 	throw std::logic_error("get_precedence");
 }
 
+enum class associativity {
+	left,
+	right,
+	none
+};
+
+associativity get_associativity(int precedence) {
+	switch (precedence) {
+		case 4: // **
+			return associativity::right;
+		case 8: // > < >= <=
+		case 9: // != ==
+			return associativity::none;
+		default:
+			return associativity::left;
+	}
+}
+
 }
 
 std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
@@ -499,7 +517,26 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 				auto e = dynamic_cast<operator_expression *>(lhs->get());
 				if (!e) break;
 				if (e->parenthesized) break;
-				if (get_precedence(op, false) >= get_precedence(e->op, e->is_unary())) break;
+				int precedence_a = get_precedence(op, false);
+				int precedence_b = get_precedence(e->op, e->is_unary());
+				if (precedence_a > precedence_b) break;
+				if (precedence_a == precedence_b) {
+					auto assoc = get_associativity(precedence_a);
+					if (assoc == associativity::none) {
+						if (op == e->op ) {
+							throw parse_error(
+								"operator `" + std::string(e->op) + "' has no associativity", e->op,
+								{{"conflicting `" + std::string(op) + "' here", op}}
+							);
+						} else {
+							throw parse_error(
+								"operator `" + std::string(e->op) + "' has equal precedence as `" + std::string(op) + "' and has no associativity", e->op,
+								{{"conflicting `" + std::string(op) + "' here", op}}
+							);
+						}
+					}
+					if (assoc == associativity::left) break;
+				}
 				lhs = &e->rhs;
 			}
 

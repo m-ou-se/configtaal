@@ -1,1 +1,1 @@
-a + b * d ** c(foo ** e * bar + quux) + ~hello - -!!world & test + foobar
+a + x + b * x*d**x ** y ** c(foo ** e * bar + quux) + ~hello - -!!world - x & test + foobar
