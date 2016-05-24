@@ -602,12 +602,12 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 					if (assoc == associativity::none) {
 						if (op == e->op ) {
 							throw parse_error(
-								"operator `" + std::string(e->op) + "' has no associativity", e->op,
+								"operator `" + std::string(e->op) + "' is non-associative", e->op,
 								{{"conflicting `" + std::string(op) + "' here", op}}
 							);
 						} else {
 							throw parse_error(
-								"operator `" + std::string(e->op) + "' has equal precedence as `" + std::string(op) + "' and has no associativity", e->op,
+								"operator `" + std::string(e->op) + "' has equal precedence as `" + std::string(op) + "' and is non-associative", e->op,
 								{{"conflicting `" + std::string(op) + "' here", op}}
 							);
 						}
