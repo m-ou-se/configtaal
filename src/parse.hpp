@@ -4,7 +4,9 @@
 #include <stdexcept>
 #include <vector>
 
+#include <optional.hpp>
 #include <string_view.hpp>
+#include <string_tracker.hpp>
 
 #include "expression.hpp"
 
