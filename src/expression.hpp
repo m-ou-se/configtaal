@@ -11,14 +11,14 @@ public:
 	virtual ~expression() {}
 };
 
-class identifier_expression : public expression {
+class identifier_expression final : public expression {
 public:
 	explicit identifier_expression(string_view identifier) : identifier(identifier) {}
 
 	string_view identifier;
 };
 
-class operator_expression : public expression {
+class operator_expression final : public expression {
 	// Represents both binary and unary operator expressions.
 public:
 	operator_expression(
@@ -41,7 +41,7 @@ public:
 	literal_expression() {}
 };
 
-class string_literal_expression : public literal_expression {
+class string_literal_expression final : public literal_expression {
 public:
 	explicit string_literal_expression(string_view value)
 		: value(value) {}
@@ -49,7 +49,7 @@ public:
 	string_view value;
 };
 
-class object_literal_expression : public literal_expression {
+class object_literal_expression final : public literal_expression {
 public:
 	explicit object_literal_expression(
 		std::vector<std::pair<string_view, std::unique_ptr<expression>>> values
@@ -58,7 +58,7 @@ public:
 	std::vector<std::pair<string_view, std::unique_ptr<expression>>> values;
 };
 
-class list_literal_expression : public literal_expression {
+class list_literal_expression final : public literal_expression {
 public:
 	explicit list_literal_expression(
 		std::vector<std::unique_ptr<expression>> values
