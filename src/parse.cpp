@@ -633,7 +633,7 @@ std::unique_ptr<expression> parser::parse_expression(matcher const & end) {
 }
 
 std::unique_ptr<object_literal_expression> parser::parse_object(matcher const & end) {
-	std::vector<std::pair<std::unique_ptr<expression> , std::unique_ptr<expression>>> values;
+	std::vector<std::pair<std::unique_ptr<expression>, std::unique_ptr<expression>>> values;
 	while (true) {
 		if (parse_end(end)) break;
 		auto name = parse_identifier(source_);
