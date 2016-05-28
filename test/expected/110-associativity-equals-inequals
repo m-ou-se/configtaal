@@ -1,6 +1,6 @@
 tests/110-associativity-equals-inequals:1:3: error: operator `==' has equal precedence as `!=' and is non-associative
 a == b != c
-  ^^        
+  ^^
 tests/110-associativity-equals-inequals:1:8: conflicting `!=' here
 a == b != c
-       ^^   
+       ^^
