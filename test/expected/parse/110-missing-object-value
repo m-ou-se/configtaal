@@ -1,0 +1,3 @@
+tests/parse/110-missing-object-value:2:6: error: missing expression after `='
+        foo =
+            ^^

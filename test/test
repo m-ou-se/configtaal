@@ -1,15 +1,29 @@
 #!/bin/bash
 
+tests=()
+
 update=0
-case "$1" in
-	--update-expected|-u)
-		update=1
-		shift
-	;;
-esac
+
+while [ $# -gt 1 ]; do
+	case "$1" in
+		--update-expected|-u)
+			update=1
+			shift
+		;;
+		--test|-t)
+			shift
+			tests+=($1)
+			shift
+		;;
+	esac
+done
+
+if [ ${#tests[@]} -eq 0 ]; then
+	tests=(parse)
+fi
 
 if [ -z "$1" ]; then
-	echo "Usage: $0 [-u|--update-expected] <program>"
+	echo "Usage: $0 [-u|--update-expected] [(-t|--test) <test-set>] <program>"
 	exit 1
 fi
 
@@ -17,17 +31,19 @@ program="$(realpath "$1")"
 
 testdir="$(dirname "$0")"
 
-passed=0
-failed=0
+total_passed=0
+total_failed=0
 
 pass() {
 	echo -e "\r[\033[1;32mPASS\033[m]"
 	((passed++))
+	((total_passed++))
 }
 
 fail() {
 	echo -e "\r[\033[1;31mFAIL\033[m]"
 	((failed++))
+	((total_failed++))
 }
 
 diff='git -c color.diff.old=green -c color.diff.new=red --no-pager diff -U1 --no-index --color --exit-code'
@@ -36,14 +52,30 @@ set -e
 
 rm -rf test-output test-diff
 mkdir test-output test-diff
+for dir in $tests; do
+	mkdir "test-output/$dir" "test-diff/$dir"
+done
 ln -sfT "$testdir/tests" tests
 
 set +e
 
-for t in "tests"/*; do
-	t=${t##*/}
+for dir in "${tests[@]}"; do
+
+passed=0
+failed=0
+
+if [ -d "tests/$dir" ]; then
+
+if [ -f "tests/$dir"-flags ]; then
+	flags="$(<"tests/$dir"-flags)"
+else
+	flags=''
+fi
+
+for t in "tests/$dir"/*; do
+	t="$dir/${t##*/}"
 	echo -n "[....] $t"
-	$program tests/$t &> "test-output/$t"
+	$program $flags "tests/$t" &> "test-output/$t"
 	r=$?
 	if [ $r != 0 ]; then
 		fail
@@ -62,10 +94,27 @@ for t in "tests"/*; do
 	fi
 done
 
-if [ $failed == 0 ]; then
-	echo -e "[\033[1;32mALL $passed TESTS PASSED\033[m]";
-	exit 0
 else
-	echo -e "[\033[1;31m$failed TEST(S) FAILED\033[m]";
+
+echo -n "[....] No such directory: tests/$dir"
+fail
+
+fi
+
+if [ ${#tests[@]} -gt 1 ]; then
+	if [ $failed -gt 0 ]; then
+		echo -e "[\033[1;31m$failed $dir TEST(S) FAILED\033[m]\n";
+	else
+		echo -e "[\033[1;32mALL $passed $dir TESTS PASSED\033[m]\n";
+	fi
+fi
+
+done
+
+if [ $total_failed -gt 0 ]; then
+	echo -e "[\033[1;31m$total_failed TEST(S) FAILED\033[m]";
 	exit 1
+else
+	echo -e "[\033[1;32mALL $total_passed TESTS PASSED\033[m]";
+	exit 0
 fi
