@@ -443,22 +443,30 @@ int get_precedence(string_view op, bool unary) {
 	throw std::logic_error("get_precedence");
 }
 
-enum class associativity {
+enum class order {
 	left,
 	right,
-	none
+	unordered
 };
 
-associativity get_associativity(int precedence) {
+order get_associativity(int precedence) {
 	switch (precedence) {
 		case 4: // **
-			return associativity::right;
+			return order::right;
 		case 8: // > < >= <=
 		case 9: // != ==
-			return associativity::none;
+			return order::unordered;
 		default:
-			return associativity::left;
+			return order::left;
 	}
+}
+
+order higher_precedence(string_view left_op, bool left_op_unary, string_view right_op, bool right_op_unary) {
+	int left = get_precedence(left_op, left_op_unary);
+	int right = get_precedence(right_op, right_op_unary);
+	if (left < right) return order::left;
+	if (left > right) return order::right;
+	return get_associativity(left);
 }
 
 }
@@ -594,22 +602,15 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 				auto e = dynamic_cast<operator_expression *>(lhs->get());
 				if (!e) break;
 				if (e->parenthesized) break;
-				int precedence_a = get_precedence(op, false);
-				int precedence_b = get_precedence(e->op, e->is_unary());
-				if (precedence_a > precedence_b) break;
-				if (precedence_a == precedence_b) {
-					auto assoc = get_associativity(precedence_a);
-					if (assoc == associativity::none) {
-						throw parse_error(
-							"operator '" + std::string(e->op) + "' " +
-								(op == e->op ? "" : "has equal precedence as `" + std::string(op) + "' and ") +
-								"is non-associative",
-							e->op,
-							{{"conflicting `" + std::string(op) + "' here", op}}
-						);
-					}
-					if (assoc == associativity::left) break;
-				}
+				auto p = higher_precedence(e->op, e->is_unary(), op, false);
+				if (p == order::left) break;
+				if (p == order::unordered) throw parse_error(
+					"operator `" + std::string(e->op) + "' " +
+						(op == e->op ? "" : "has equal precedence as `" + std::string(op) + "' and ") +
+						"is non-associative",
+					e->op,
+					{{"conflicting `" + std::string(op) + "' here", op}}
+				);
 				lhs = &e->rhs;
 			}
 
