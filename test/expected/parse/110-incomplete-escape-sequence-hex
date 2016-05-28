@@ -1,0 +1,3 @@
+tests/parse/110-incomplete-escape-sequence-hex:1:10: error: expected hexadecimal digit (0-9, a-f, A-F)
+"hello \x"
+         ^

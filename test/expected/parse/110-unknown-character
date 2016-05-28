@@ -1,0 +1,3 @@
+tests/parse/110-unknown-character:1:1: error: expected expression
+@!@#$
+^

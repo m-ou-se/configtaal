@@ -1,0 +1,3 @@
+tests/parse/110-unterminated-string-literal:2:10: error: unterminated string literal
+        hello = "hello
+                ^^^^^^^

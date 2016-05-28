@@ -1,0 +1,3 @@
+tests/parse/110-bad-list:1:6: error: missing expression
+[foo, , bar]
+     ^^

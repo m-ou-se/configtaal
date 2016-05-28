@@ -1,0 +1,3 @@
+tests/parse/110-invalid-escape-sequence-unicode:1:12: error: expected hexadecimal digit (0-9, a-f, A-F)
+"hello \u12Z3 world"
+           ^

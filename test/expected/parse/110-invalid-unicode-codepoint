@@ -1,0 +1,3 @@
+tests/parse/110-invalid-unicode-codepoint:1:8: error: invalid unicode codepoint
+"hello \U00200000 world"
+       ^^^^^^^^^^
