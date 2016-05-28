@@ -12,6 +12,7 @@ add_subdirectory(third-party/stringpool)
 
 add_library(configtaal-parser STATIC
 	src/parse.cpp
+	src/precedence.cpp
 )
 target_link_libraries(configtaal-parser string_tracker)
 

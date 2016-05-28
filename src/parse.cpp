@@ -9,6 +9,7 @@
 
 #include "expression.hpp"
 #include "parse.hpp"
+#include "precedence.hpp"
 
 namespace conftaal {
 
@@ -410,67 +411,6 @@ std::unique_ptr<identifier_expression> parser::parse_identifier_expression(strin
 	}
 }
 
-namespace {
-
-int get_precedence(string_view op, bool unary) {
-	if (unary) {
-		return 3;
-	} else {
-		if (!op.empty()) switch (op[0]) {
-			case '.': case '(': case '[':
-				return 1; // . ( [
-			case '*':
-				if (op.size() > 1 && op[1] == '*') return 4; // **
-			case '/': case '%':
-				return 5; // * / %
-			case '+': case '-':
-				return 6; // + -
-			case '<': case '>':
-				if (op.size() > 1 && op[1] == op[0]) return 7; // >> <<
-				return 8; // > < >= <=
-			case '=': case '!':
-				return 9; // != ==
-			case '&':
-				if (op.size() > 1 && op[1] == '&') return 13; // &&
-				return 10; // &
-			case '^':
-				return 11; // ^
-			case '|':
-				if (op.size() > 1 && op[1] == '|') return 14; // ||
-				return 12; // |
-		}
-	}
-	throw std::logic_error("get_precedence");
-}
-
-enum class order {
-	left,
-	right,
-	unordered
-};
-
-order get_associativity(int precedence) {
-	switch (precedence) {
-		case 4: // **
-			return order::right;
-		case 8: // > < >= <=
-		case 9: // != ==
-			return order::unordered;
-		default:
-			return order::left;
-	}
-}
-
-order higher_precedence(string_view left_op, bool left_op_unary, string_view right_op, bool right_op_unary) {
-	int left = get_precedence(left_op, left_op_unary);
-	int right = get_precedence(right_op, right_op_unary);
-	if (left < right) return order::left;
-	if (left > right) return order::right;
-	return get_associativity(left);
-}
-
-}
-
 std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
 	if (parse_end(end, false)) return nullptr;
 
@@ -602,7 +542,7 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 				auto e = dynamic_cast<operator_expression *>(lhs->get());
 				if (!e) break;
 				if (e->parenthesized) break;
-				auto p = higher_precedence(e->op, e->is_unary(), op, false);
+				auto p = higher_precedence(e->op, e->is_unary(), op);
 				if (p == order::left) break;
 				if (p == order::unordered) throw parse_error(
 					"operator `" + std::string(e->op) + "' " +
