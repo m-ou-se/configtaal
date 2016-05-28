@@ -17,6 +17,7 @@ add_library(configtaal-parser STATIC
 target_link_libraries(configtaal-parser string_tracker)
 
 add_executable(configtaal-test
+	src/print_error.cpp
 	src/test.cpp
 )
 target_link_libraries(configtaal-test configtaal-parser)
