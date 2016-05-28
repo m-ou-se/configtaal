@@ -39,6 +39,7 @@ void print_message(string_view message, string_tracker const & tracker, string_v
 				std::clog << *c;
 			}
 		}
+		while (!pointer_line.empty() && pointer_line.back() == ' ') pointer_line.pop_back();
 		if (bad_line_start == original_source_end) {
 			if (color) std::clog << "\033[34m";
 			std::clog << "<end of file>";

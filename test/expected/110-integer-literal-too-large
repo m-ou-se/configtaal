@@ -1,3 +1,3 @@
 tests/110-integer-literal-too-large:1:1: error: constant too large for 64-bit signed integer
 9223372036854775808
-^^^^^^^^^^^^^^^^^^^ 
+^^^^^^^^^^^^^^^^^^^
