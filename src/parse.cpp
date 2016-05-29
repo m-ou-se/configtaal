@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cctype>
+#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 
