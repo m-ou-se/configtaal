@@ -122,12 +122,12 @@ public:
 		return desc;
 	}
 
-	parse_error error(string_view source) const {
+	ParseError error(string_view source) const {
 		std::vector<std::pair<std::string, string_view>> notes;
 		if (mode_ == match_mode::matching_bracket && !or_before_) {
 			notes = {{"... to match this `" + std::string(matching_bracket_) + "'", matching_bracket_}};
 		}
-		return parse_error(
+		return ParseError(
 			"expected " + description(),
 			source.substr(0, 0),
 			std::move(notes)
@@ -184,7 +184,7 @@ int parse_hex_digit(string_view & s) {
 			return value;
 		}
 	}
-	throw parse_error("expected hexadecimal digit (0-9, a-f, A-F)", s.substr(0, 0));
+	throw ParseError("expected hexadecimal digit (0-9, a-f, A-F)", s.substr(0, 0));
 }
 
 size_t encode_utf8(char32_t codepoint, char (& buffer)[4]) {
@@ -213,7 +213,7 @@ size_t encode_utf8(char32_t codepoint, char (& buffer)[4]) {
 
 }
 
-std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
+std::unique_ptr<StringLiteralExpression> parser::parse_string_literal() {
 	auto const original_source = source_;
 
 	char const quote = source_[0];
@@ -229,7 +229,7 @@ std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 		}
 		value = string_view(value.data(), source_.data() - value.data());
 		if (source_.empty()) {
-			throw parse_error("unterminated string literal", original_source);
+			throw ParseError("unterminated string literal", original_source);
 		} else if (source_[0] == quote) {
 			source_.remove_prefix(1);
 			break;
@@ -237,7 +237,7 @@ std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 			assert(source_[0] == '\\');
 			if (!value.empty()) string_builder.append(value, value);
 
-			if (source_.size() < 2) throw parse_error("incomplete escape sequence", source_);
+			if (source_.size() < 2) throw ParseError("incomplete escape sequence", source_);
 			switch (source_[1]) {
 				case '\\': case '"':
 				case 't': case 'n': case 'r':
@@ -288,7 +288,7 @@ std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 					if (size_t n_bytes = encode_utf8(codepoint, buffer)) {
 						string_builder.append(string_view(buffer, n_bytes), escape_sequence);
 					} else {
-						throw parse_error(
+						throw ParseError(
 							"invalid unicode codepoint",
 							escape_sequence
 						);
@@ -309,13 +309,13 @@ std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 						source_.remove_prefix(1);
 					}
 					string_view escape_sequence(escape_sequence_start, source_.data() - escape_sequence_start);
-					if (value > 255) throw parse_error("octal escape sequence out of range", escape_sequence);
+					if (value > 255) throw ParseError("octal escape sequence out of range", escape_sequence);
 					char ch = value;
 					string_builder.append(string_view(&ch, 1), escape_sequence);
 					break;
 				}
 				default:
-					throw parse_error("invalid escape sequence", source_.substr(0, 2));
+					throw ParseError("invalid escape sequence", source_.substr(0, 2));
 			}
 		}
 	}
@@ -327,10 +327,10 @@ std::unique_ptr<string_literal_expression> parser::parse_string_literal() {
 		value = string_builder.build();
 	}
 
-	return std::make_unique<string_literal_expression>(value);
+	return std::make_unique<StringLiteralExpression>(value);
 }
 
-std::unique_ptr<expression> parser::parse_number() {
+std::unique_ptr<Expression> parser::parse_number() {
 
 	char const * source_begin = source_.data();
 
@@ -376,7 +376,7 @@ std::unique_ptr<expression> parser::parse_number() {
 			source_.remove_prefix(1);
 		}
 		exponent_part = source_.substr(0, source_.find_first_not_of(decimal_digits));
-		if (exponent_part.empty()) throw parse_error("missing exponent", exponent_part);
+		if (exponent_part.empty()) throw ParseError("missing exponent", exponent_part);
 		source_.remove_prefix(integer_part.size());
 	}
 
@@ -387,42 +387,42 @@ std::unique_ptr<expression> parser::parse_number() {
 		for (char c : integer_part) {
 			uint64_t v = value * base + digit_value(c);
 			if (v < value || v > uint64_t(std::numeric_limits<int64_t>::max())) {
-				throw parse_error("constant too large for 64-bit signed integer", literal_source);
+				throw ParseError("constant too large for 64-bit signed integer", literal_source);
 			} else {
 				value = v;
 			}
 		}
-		return std::make_unique<integer_literal_expression>(int64_t(value));
+		return std::make_unique<IntegerLiteralExpression>(int64_t(value));
 	} else {
 		(void) fractional_part;
 		(void) exponent_sign;
 		(void) exponent_part;
-		throw parse_error("floating point literals are not yet implemented", literal_source);
+		throw ParseError("floating point literals are not yet implemented", literal_source);
 	}
 
 }
 
-std::unique_ptr<identifier_expression> parser::parse_identifier_expression(string_view & source) {
+std::unique_ptr<IdentifierExpression> parser::parse_identifier_expression(string_view & source) {
 	auto identifier = parse_identifier(source);
 	if (!identifier.empty()) {
-		return std::make_unique<identifier_expression>(identifier);
+		return std::make_unique<IdentifierExpression>(identifier);
 	} else {
 		return nullptr;
 	}
 }
 
-std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
+std::unique_ptr<Expression> parser::parse_expression_atom(matcher const & end) {
 	if (parse_end(end, false)) return nullptr;
 
 	if (source_[0] == '(') {
 		auto open = source_.substr(0, 1);
 		source_.remove_prefix(1);
 		auto expr = parse_expression(matcher(match_mode::matching_bracket, ")", open));
-		if (!expr) throw parse_error(
+		if (!expr) throw ParseError(
 			"missing expression between `(' and `)'",
 			string_view(open.data(), source_.data() - open.data() + 1)
 		);
-		if (auto e = dynamic_cast<operator_expression *>(expr.get())) {
+		if (auto e = dynamic_cast<OperatorExpression *>(expr.get())) {
 			e->parenthesized = true;
 		}
 		return expr;
@@ -431,11 +431,11 @@ std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
 		auto op = source_.substr(0, 1);
 		source_.remove_prefix(1);
 		auto subexpr = parse_expression_atom(end);
-		if (!subexpr) throw parse_error(
+		if (!subexpr) throw ParseError(
 			"missing expression after unary `" + std::string(op) + "' operator",
 			string_view(op.data(), source_.data() - op.data() + 1)
 		);
-		return std::make_unique<operator_expression>(op, nullptr, std::move(subexpr));
+		return std::make_unique<OperatorExpression>(op, nullptr, std::move(subexpr));
 
 	} else if (is_identifier_start(source_[0])) {
 		return parse_identifier_expression(source_);
@@ -457,16 +457,16 @@ std::unique_ptr<expression> parser::parse_expression_atom(matcher const & end) {
 		return parse_number();
 
 	} else if (source_[0] == '\\') {
-		throw parse_error("lambdas are not yet implemented", source_.substr(0, 1));
+		throw ParseError("lambdas are not yet implemented", source_.substr(0, 1));
 
 	} else {
-		throw parse_error("expected expression", source_.substr(0, 0));
+		throw ParseError("expected expression", source_.substr(0, 0));
 
 	}
 
 }
 
-bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher const & end) {
+bool parser::parse_more_expression(std::unique_ptr<Expression> & expr, matcher const & end) {
 	if (parse_end(end)) return false;
 
 	switch (source_[0]) {
@@ -489,9 +489,9 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 					} else {
 						// Just '!' and '=' aren't binary operators.
 						if (source_[0] == '!') {
-							throw parse_error("`!' can only be used as unary operator", op);
+							throw ParseError("`!' can only be used as unary operator", op);
 						} else {
-							throw parse_error("assignment (`=') cannot be used in expressions (did you mean `=='?)", op);
+							throw ParseError("assignment (`=') cannot be used in expressions (did you mean `=='?)", op);
 						}
 					}
 					break;
@@ -509,25 +509,25 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 					}
 					break;
 				case '~':
-					throw parse_error("`~' can only be used as unary operator", op);
+					throw ParseError("`~' can only be used as unary operator", op);
 					break;
 			}
 
 			source_.remove_prefix(op.size());
 
-			std::unique_ptr<expression> rhs;
+			std::unique_ptr<Expression> rhs;
 
 			if (op == "[" || op == "(") {
 				rhs = parse_list(matcher(match_mode::matching_bracket, op == "[" ? "]" : ")", op));
 			} else if (op == ".") {
 				rhs = parse_identifier_expression(source_);
-				if (!rhs) throw parse_error(
+				if (!rhs) throw ParseError(
 					"expected identifier after `.'",
 					string_view(op.data(), source_.data() - op.data() + 1)
 				);
 			} else {
 				rhs = parse_expression_atom(end);
-				if (!rhs) throw parse_error(
+				if (!rhs) throw ParseError(
 					"missing expression after `" + std::string(op) + "' operator",
 					string_view(op.data(), source_.data() - op.data() + 1)
 				);
@@ -537,14 +537,14 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 			// Often it is the entire expression expr,
 			// but depending on the precedence of operators,
 			// it might be just a subexpresssion of expr.
-			std::unique_ptr<expression> * lhs = &expr;
+			std::unique_ptr<Expression> * lhs = &expr;
 			while (true) {
-				auto e = dynamic_cast<operator_expression *>(lhs->get());
+				auto e = dynamic_cast<OperatorExpression *>(lhs->get());
 				if (!e) break;
 				if (e->parenthesized) break;
 				auto p = higher_precedence(e->op, e->is_unary(), op);
 				if (p == order::left) break;
-				if (p == order::unordered) throw parse_error(
+				if (p == order::unordered) throw ParseError(
 					"operator `" + std::string(e->op) + "' " +
 						(op == e->op ? "" : "has equal precedence as `" + std::string(op) + "' and ") +
 						"is non-associative",
@@ -555,54 +555,54 @@ bool parser::parse_more_expression(std::unique_ptr<expression> & expr, matcher c
 			}
 
 			// Replace the expression by an operator_expression that uses it as the left hand side.
-			*lhs = std::make_unique<operator_expression>(op, std::move(*lhs), std::move(rhs));
+			*lhs = std::make_unique<OperatorExpression>(op, std::move(*lhs), std::move(rhs));
 
 			return true;
 		}
 	}
 
-	throw parse_error(
+	throw ParseError(
 		"expected binary operator or " + end.description(),
 		source_.substr(0, 0)
 	);
 }
 
-std::unique_ptr<expression> parser::parse_expression(matcher const & end) {
+std::unique_ptr<Expression> parser::parse_expression(matcher const & end) {
 	auto expr = parse_expression_atom(end);
 	if (expr) while (parse_more_expression(expr, end));
 	return expr;
 }
 
-std::unique_ptr<object_literal_expression> parser::parse_object(matcher const & end) {
-	std::vector<std::pair<std::unique_ptr<expression>, std::unique_ptr<expression>>> values;
+std::unique_ptr<ObjectLiteralExpression> parser::parse_object(matcher const & end) {
+	std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> values;
 	while (true) {
 		if (parse_end(end)) break;
 		auto name = parse_identifier(source_);
-		if (name.empty()) throw parse_error("expected identifier or " + end.description(), source_.substr(0, 0));
+		if (name.empty()) throw ParseError("expected identifier or " + end.description(), source_.substr(0, 0));
 		auto eq = matcher("=").parse(source_);
 		auto value = parse_expression(matcher(match_mode::object_element).or_before(end));
-		if (!value) throw parse_error(
+		if (!value) throw ParseError(
 			"missing expression after `='",
 			string_view(eq.data(), source_.data() - eq.data() + 1)
 		);
-		values.emplace_back(std::make_unique<string_literal_expression>(name), std::move(value));
+		values.emplace_back(std::make_unique<StringLiteralExpression>(name), std::move(value));
 	}
-	return std::make_unique<object_literal_expression>(std::move(values));
+	return std::make_unique<ObjectLiteralExpression>(std::move(values));
 }
 
-std::unique_ptr<list_literal_expression> parser::parse_list(matcher const & end) {
-	std::vector<std::unique_ptr<expression>> values;
+std::unique_ptr<ListLiteralExpression> parser::parse_list(matcher const & end) {
+	std::vector<std::unique_ptr<Expression>> values;
 	while (true) {
 		char const * expression_begin = source_.data();
 		if (parse_end(end)) break;
 		auto value = parse_expression(matcher(",").or_before(end));
-		if (!value) throw parse_error(
+		if (!value) throw ParseError(
 			"missing expression",
 			string_view(expression_begin, source_.data() - expression_begin + 1)
 		);
 		values.push_back(std::move(value));
 	}
-	return std::make_unique<list_literal_expression>(std::move(values));
+	return std::make_unique<ListLiteralExpression>(std::move(values));
 }
 
 }

@@ -12,7 +12,7 @@
 
 namespace conftaal {
 
-class parse_error : public std::runtime_error {
+class ParseError : public std::runtime_error {
 
 private:
 	string_view where_;
@@ -21,7 +21,7 @@ private:
 	std::vector<std::pair<std::string, string_view>> notes_;
 
 public:
-	parse_error(
+	ParseError(
 		std::string what,
 		string_view where,
 		std::vector<std::pair<std::string, string_view>> notes = {}
@@ -43,20 +43,20 @@ public:
 	explicit parser(string_tracker & tracker, string_view source)
 		: string_tracker_(tracker), source_(source) {}
 
-	std::unique_ptr<expression> parse_expression(matcher const & end = match_end_of_file);
-	std::unique_ptr<list_literal_expression> parse_list(matcher const & end = match_end_of_file);
-	std::unique_ptr<object_literal_expression> parse_object(matcher const & end = match_end_of_file);
+	std::unique_ptr<Expression> parse_expression(matcher const & end = match_end_of_file);
+	std::unique_ptr<ListLiteralExpression> parse_list(matcher const & end = match_end_of_file);
+	std::unique_ptr<ObjectLiteralExpression> parse_object(matcher const & end = match_end_of_file);
 
 	static bool is_identifier_start(char c);
 	static string_view parse_identifier(string_view & source);
-	static std::unique_ptr<identifier_expression> parse_identifier_expression(string_view & source);
+	static std::unique_ptr<IdentifierExpression> parse_identifier_expression(string_view & source);
 
 private:
-	std::unique_ptr<expression> parse_expression_atom(matcher const & end);
-	bool parse_more_expression(std::unique_ptr<expression> & expr, matcher const & end);
+	std::unique_ptr<Expression> parse_expression_atom(matcher const & end);
+	bool parse_more_expression(std::unique_ptr<Expression> & expr, matcher const & end);
 
-	std::unique_ptr<string_literal_expression> parse_string_literal();
-	std::unique_ptr<expression> parse_number();
+	std::unique_ptr<StringLiteralExpression> parse_string_literal();
+	std::unique_ptr<Expression> parse_number();
 
 	optional<string_view> parse_end(matcher const &, bool consume = true);
 

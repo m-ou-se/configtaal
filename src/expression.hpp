@@ -8,79 +8,79 @@
 
 namespace conftaal {
 
-class expression {
+class Expression {
 public:
-	virtual ~expression() {}
+	virtual ~Expression() {}
 };
 
-class identifier_expression final : public expression {
+class IdentifierExpression final : public Expression {
 public:
-	explicit identifier_expression(string_view identifier) : identifier(identifier) {}
+	explicit IdentifierExpression(string_view identifier) : identifier(identifier) {}
 
 	string_view identifier;
 };
 
-class operator_expression final : public expression {
+class OperatorExpression final : public Expression {
 	// Represents both binary and unary operator expressions.
 public:
-	operator_expression(
+	OperatorExpression(
 		string_view op,
-		std::unique_ptr<expression> lhs,
-		std::unique_ptr<expression> rhs
+		std::unique_ptr<Expression> lhs,
+		std::unique_ptr<Expression> rhs
 	) : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
 	string_view op;
-	std::unique_ptr<expression> lhs;
-	std::unique_ptr<expression> rhs;
+	std::unique_ptr<Expression> lhs;
+	std::unique_ptr<Expression> rhs;
 
 	bool parenthesized = false;
 
 	bool is_unary() const { return lhs == nullptr; }
 };
 
-class literal_expression : public expression {
+class LiteralExpression : public Expression {
 public:
-	literal_expression() {}
+	LiteralExpression() {}
 };
 
-class integer_literal_expression final : public literal_expression {
+class IntegerLiteralExpression final : public LiteralExpression {
 public:
-	explicit integer_literal_expression(std::int64_t value) : value(value) {}
+	explicit IntegerLiteralExpression(std::int64_t value) : value(value) {}
 
 	std::int64_t value;
 };
 
-class double_literal_expression final : public literal_expression {
+class DoubleLiteralExpression final : public LiteralExpression {
 public:
-	explicit double_literal_expression(double value) : value(value) {}
+	explicit DoubleLiteralExpression(double value) : value(value) {}
 
 	double value;
 };
 
-class string_literal_expression final : public literal_expression {
+class StringLiteralExpression final : public LiteralExpression {
 public:
-	explicit string_literal_expression(string_view value)
+	explicit StringLiteralExpression(string_view value)
 		: value(value) {}
 
 	string_view value;
 };
 
-class object_literal_expression final : public literal_expression {
+class ObjectLiteralExpression final : public LiteralExpression {
 public:
-	explicit object_literal_expression(
-		std::vector<std::pair<std::unique_ptr<expression>, std::unique_ptr<expression>>> elements
+	explicit ObjectLiteralExpression(
+		std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> elements
 	) : elements(std::move(elements)) {}
 
-	std::vector<std::pair<std::unique_ptr<expression>, std::unique_ptr<expression>>> elements;
+	std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> elements;
 };
 
-class list_literal_expression final : public literal_expression {
+class ListLiteralExpression final : public LiteralExpression {
 public:
-	explicit list_literal_expression(
-		std::vector<std::unique_ptr<expression>> elements
+	explicit ListLiteralExpression(
+		std::vector<std::unique_ptr<Expression>> elements
 	) : elements(std::move(elements)) {}
 
-	std::vector<std::unique_ptr<expression>> elements;
+	std::vector<std::unique_ptr<Expression>> elements;
 };
 
 }
