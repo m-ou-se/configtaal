@@ -53,7 +53,7 @@ void print_message(string_view message, string_tracker const & tracker, string_v
 	}
 }
 
-void print_error(parse_error const & error, string_tracker const & tracker, bool color) {
+void print_error(ParseError const & error, string_tracker const & tracker, bool color) {
 	print_message(error.what(), tracker, error.where(), color, true);
 	for (auto const & note : error.notes()) {
 		print_message(note.first, tracker, note.second, color, false);
