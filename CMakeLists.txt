@@ -11,8 +11,8 @@ endif()
 add_subdirectory(third-party/stringpool)
 
 add_library(configtaal-parser STATIC
+	src/operator.cpp
 	src/parse.cpp
-	src/precedence.cpp
 )
 target_link_libraries(configtaal-parser string_tracker)
 

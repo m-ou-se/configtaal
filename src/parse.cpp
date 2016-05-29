@@ -9,8 +9,8 @@
 #include <optional.hpp>
 
 #include "expression.hpp"
+#include "operator.hpp"
 #include "parse.hpp"
-#include "precedence.hpp"
 
 namespace conftaal {
 
@@ -408,6 +408,54 @@ std::unique_ptr<IdentifierExpression> Parser::parse_identifier_expression(string
 	}
 }
 
+namespace {
+
+operator_ unary_operator(string_view op) {
+	switch (op[0]) {
+		case '+': return operator_::unary_plus;
+		case '-': return operator_::unary_minus;
+		case '!': return operator_::not_;
+		case '~': return operator_::complement;
+	}
+	assert(false);
+}
+
+operator_ binary_operator(string_view op) {
+	switch (op[0]) {
+		case '.': return operator_::dot;
+		case '(': return operator_::call;
+		case '[': return operator_::index;
+		case '*':
+			if (op.size() > 1 && op[1] == '*') return operator_::power;
+			return operator_::times;
+		case '/': return operator_::divide;
+		case '%': return operator_::modulo;
+		case '+': return operator_::plus;
+		case '-': return operator_::minus;
+		case '<':
+			if (op.size() > 1 && op[1] == '<') return operator_::left_shift;
+			return operator_::less;
+		case '>':
+			if (op.size() > 1 && op[1] == '>') return operator_::right_shift;
+			return operator_::greater;
+		case '=': // ==
+			return operator_::equal;
+		case '!': // !=
+			return operator_::inequal;
+		case '&':
+			if (op.size() > 1 && op[1] == '&') return operator_::and_;
+			return operator_::bit_and;
+		case '^':
+			return operator_::bit_xor;
+		case '|':
+			if (op.size() > 1 && op[1] == '|') return operator_::or_;
+			return operator_::bit_or;
+	}
+	assert(false);
+}
+
+}
+
 std::unique_ptr<Expression> Parser::parse_expression_atom(Matcher const & end) {
 	if (parse_end(end, false)) return nullptr;
 
@@ -425,14 +473,15 @@ std::unique_ptr<Expression> Parser::parse_expression_atom(Matcher const & end) {
 		return expr;
 
 	} else if (source_[0] == '!' || source_[0] == '~' || source_[0] == '-' || source_[0] == '+') {
-		auto op = source_.substr(0, 1);
+		auto op_source = source_.substr(0, 1);
+		auto op = unary_operator(op_source);
 		source_.remove_prefix(1);
 		auto subexpr = parse_expression_atom(end);
 		if (!subexpr) throw ParseError(
-			"missing expression after unary `" + std::string(op) + "' operator",
-			string_view(op.data(), source_.data() - op.data() + 1)
+			"missing expression after unary `" + std::string(op_source) + "' operator",
+			string_view(op_source.data(), source_.data() - op_source.data() + 1)
 		);
-		return std::make_unique<OperatorExpression>(op, nullptr, std::move(subexpr));
+		return std::make_unique<OperatorExpression>(op, op_source, nullptr, std::move(subexpr));
 
 	} else if (is_identifier_start(source_[0])) {
 		return parse_identifier_expression(source_);
@@ -475,20 +524,20 @@ bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher c
 		case '[': case '(': case '.':
 		case '~': {
 
-			auto op = source_.substr(0, 1);
+			auto op_source = source_.substr(0, 1);
 
 			// Multi-character operators.
 			switch (source_[0]) {
 				case '!': // !=
 				case '=': // ==
 					if (source_.size() > 1 && source_[1] == '=') {
-						op = source_.substr(0, 2);
+						op_source = source_.substr(0, 2);
 					} else {
 						// Just '!' and '=' aren't binary operators.
 						if (source_[0] == '!') {
-							throw ParseError("`!' can only be used as unary operator", op);
+							throw ParseError("`!' can only be used as unary operator", op_source);
 						} else {
-							throw ParseError("assignment (`=') cannot be used in expressions (did you mean `=='?)", op);
+							throw ParseError("assignment (`=') cannot be used in expressions (did you mean `=='?)", op_source);
 						}
 					}
 					break;
@@ -496,37 +545,39 @@ bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher c
 				case '&': // &&
 				case '|': // ||
 					if (source_.size() > 1 && source_[1] == source_[0]) {
-						op = source_.substr(0, 2);
+						op_source = source_.substr(0, 2);
 					}
 					break;
 				case '>': // >> >=
 				case '<': // << <=
 					if (source_.size() > 1 && (source_[1] == source_[0] || source_[1] == '=')) {
-						op = source_.substr(0, 2);
+						op_source = source_.substr(0, 2);
 					}
 					break;
 				case '~':
-					throw ParseError("`~' can only be used as unary operator", op);
+					throw ParseError("`~' can only be used as unary operator", op_source);
 					break;
 			}
 
-			source_.remove_prefix(op.size());
+			source_.remove_prefix(op_source.size());
+
+			operator_ op = binary_operator(op_source);
 
 			std::unique_ptr<Expression> rhs;
 
-			if (op == "[" || op == "(") {
-				rhs = parse_list(Matcher(MatchMode::matching_bracket, op == "[" ? "]" : ")", op));
-			} else if (op == ".") {
+			if (op_source == "[" || op_source == "(") {
+				rhs = parse_list(Matcher(MatchMode::matching_bracket, op_source == "[" ? "]" : ")", op_source));
+			} else if (op == operator_::dot) {
 				rhs = parse_identifier_expression(source_);
 				if (!rhs) throw ParseError(
 					"expected identifier after `.'",
-					string_view(op.data(), source_.data() - op.data() + 1)
+					string_view(op_source.data(), source_.data() - op_source.data() + 1)
 				);
 			} else {
 				rhs = parse_expression_atom(end);
 				if (!rhs) throw ParseError(
-					"missing expression after `" + std::string(op) + "' operator",
-					string_view(op.data(), source_.data() - op.data() + 1)
+					"missing expression after `" + std::string(op_source) + "' operator",
+					string_view(op_source.data(), source_.data() - op_source.data() + 1)
 				);
 			}
 
@@ -539,20 +590,20 @@ bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher c
 				auto e = dynamic_cast<OperatorExpression *>(lhs->get());
 				if (!e) break;
 				if (e->parenthesized) break;
-				auto p = higher_precedence(e->op, e->is_unary(), op);
+				auto p = higher_precedence(e->op, op);
 				if (p == order::left) break;
 				if (p == order::unordered) throw ParseError(
-					"operator `" + std::string(e->op) + "' " +
-						(op == e->op ? "" : "has equal precedence as `" + std::string(op) + "' and ") +
+					"operator `" + std::string(e->op_source) + "' " +
+						(op == e->op ? "" : "has equal precedence as `" + std::string(op_source) + "' and ") +
 						"is non-associative",
-					e->op,
-					{{"conflicting `" + std::string(op) + "' here", op}}
+					e->op_source,
+					{{"conflicting `" + std::string(op_source) + "' here", op_source}}
 				);
 				lhs = &e->rhs;
 			}
 
 			// Replace the expression by an operator_expression that uses it as the left hand side.
-			*lhs = std::make_unique<OperatorExpression>(op, std::move(*lhs), std::move(rhs));
+			*lhs = std::make_unique<OperatorExpression>(op, op_source, std::move(*lhs), std::move(rhs));
 
 			return true;
 		}
