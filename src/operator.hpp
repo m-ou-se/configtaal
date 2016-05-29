@@ -4,7 +4,7 @@
 
 namespace conftaal {
 
-enum class operator_ {
+enum class Operator {
 	/* .  */ dot,
 	/* [] */ index,
 	/* () */ call,
@@ -17,7 +17,7 @@ enum class operator_ {
 	/* +  */ unary_plus,
 	/* -  */ unary_minus,
 	/* ~  */ complement,
-	/* !  */ not_,
+	/* !  */ logical_not,
 	/* +  */ plus,
 	/* -  */ minus,
 	/* *  */ times,
@@ -29,8 +29,8 @@ enum class operator_ {
 	/* &  */ bit_and,
 	/* |  */ bit_or,
 	/* ^  */ bit_xor,
-	/* && */ and_,
-	/* || */ or_
+	/* && */ logical_and,
+	/* || */ logical_or
 };
 
 enum class order {
@@ -40,10 +40,10 @@ enum class order {
 };
 
 // A lower value means a higher precedence.
-int get_precedence(operator_);
+int get_precedence(Operator);
 
 order get_associativity(int precedence);
 
-order higher_precedence(operator_ left_op, operator_ right_op);
+order higher_precedence(Operator left_op, Operator right_op);
 
 }

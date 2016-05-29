@@ -26,13 +26,13 @@ class OperatorExpression final : public Expression {
 	// Represents both binary and unary operator expressions.
 public:
 	OperatorExpression(
-		operator_ op,
+		Operator op,
 		string_view op_source,
 		std::unique_ptr<Expression> lhs,
 		std::unique_ptr<Expression> rhs
 	) : op(op), op_source(op_source), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-	operator_ op;
+	Operator op;
 	string_view op_source;
 	std::unique_ptr<Expression> lhs;
 	std::unique_ptr<Expression> rhs;
