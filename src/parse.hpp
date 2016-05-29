@@ -44,8 +44,8 @@ public:
 		: string_tracker_(tracker), source_(source) {}
 
 	std::unique_ptr<Expression> parse_expression(matcher const & end = match_end_of_file);
-	std::unique_ptr<ListLiteralExpression> parse_list(matcher const & end = match_end_of_file);
-	std::unique_ptr<ObjectLiteralExpression> parse_object(matcher const & end = match_end_of_file);
+	std::unique_ptr<ListExpression> parse_list(matcher const & end = match_end_of_file);
+	std::unique_ptr<ObjectExpression> parse_object(matcher const & end = match_end_of_file);
 
 	static bool is_identifier_start(char c);
 	static string_view parse_identifier(string_view & source);

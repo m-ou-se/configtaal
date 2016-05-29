@@ -21,13 +21,13 @@ std::ostream & operator << (std::ostream & out, Expression const & expr) {
 		out << *e->rhs << ')';
 	} else if (auto e = dynamic_cast<IdentifierExpression const *>(&expr)) {
 		out << "(ref " << e->identifier << ')';
-	} else if (auto e = dynamic_cast<ObjectLiteralExpression const *>(&expr)) {
+	} else if (auto e = dynamic_cast<ObjectExpression const *>(&expr)) {
 		out << "(object";
 		for (auto const & v : e->elements) {
 			out << ' ' << *v.first << '=' << *v.second;
 		}
 		out << ')';
-	} else if (auto e = dynamic_cast<ListLiteralExpression const *>(&expr)) {
+	} else if (auto e = dynamic_cast<ListExpression const *>(&expr)) {
 		out << "(list";
 		for (auto const & v : e->elements) {
 			out << ' ' << *v;

@@ -65,18 +65,18 @@ public:
 	string_view value;
 };
 
-class ObjectLiteralExpression final : public LiteralExpression {
+class ObjectExpression final : public Expression {
 public:
-	explicit ObjectLiteralExpression(
+	explicit ObjectExpression(
 		std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> elements
 	) : elements(std::move(elements)) {}
 
 	std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> elements;
 };
 
-class ListLiteralExpression final : public LiteralExpression {
+class ListExpression final : public Expression {
 public:
-	explicit ListLiteralExpression(
+	explicit ListExpression(
 		std::vector<std::unique_ptr<Expression>> elements
 	) : elements(std::move(elements)) {}
 

@@ -573,7 +573,7 @@ std::unique_ptr<Expression> parser::parse_expression(matcher const & end) {
 	return expr;
 }
 
-std::unique_ptr<ObjectLiteralExpression> parser::parse_object(matcher const & end) {
+std::unique_ptr<ObjectExpression> parser::parse_object(matcher const & end) {
 	std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> values;
 	while (true) {
 		if (parse_end(end)) break;
@@ -587,10 +587,10 @@ std::unique_ptr<ObjectLiteralExpression> parser::parse_object(matcher const & en
 		);
 		values.emplace_back(std::make_unique<StringLiteralExpression>(name), std::move(value));
 	}
-	return std::make_unique<ObjectLiteralExpression>(std::move(values));
+	return std::make_unique<ObjectExpression>(std::move(values));
 }
 
-std::unique_ptr<ListLiteralExpression> parser::parse_list(matcher const & end) {
+std::unique_ptr<ListExpression> parser::parse_list(matcher const & end) {
 	std::vector<std::unique_ptr<Expression>> values;
 	while (true) {
 		char const * expression_begin = source_.data();
@@ -602,7 +602,7 @@ std::unique_ptr<ListLiteralExpression> parser::parse_list(matcher const & end) {
 		);
 		values.push_back(std::move(value));
 	}
-	return std::make_unique<ListLiteralExpression>(std::move(values));
+	return std::make_unique<ListExpression>(std::move(values));
 }
 
 }
