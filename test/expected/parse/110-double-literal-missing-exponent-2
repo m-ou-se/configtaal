@@ -1,0 +1,3 @@
+tests/parse/110-double-literal-missing-exponent-2:1:6: error: missing exponent
+1.2e+
+     ^

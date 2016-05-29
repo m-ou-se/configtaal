@@ -37,8 +37,8 @@ std::ostream & operator << (std::ostream & out, Expression const & expr) {
 		out << std::quoted(std::string(e->value));
 	} else if (auto e = dynamic_cast<IntegerLiteralExpression const *>(&expr)) {
 		out << e->value;
-	} else {
-		out << "???";
+	} else if (auto e = dynamic_cast<DoubleLiteralExpression const *>(&expr)) {
+		out << std::hexfloat << e->value;
 	}
 	return out;
 }
