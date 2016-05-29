@@ -61,7 +61,7 @@ int main(int argc, char * * argv) {
 	}
 
 	try {
-		conftaal::parser parser(tracker, *src);
+		conftaal::Parser parser(tracker, *src);
 		auto expr = parser.parse_expression();
 		if (!expr) throw conftaal::ParseError("missing expression", *src);
 		std::cout << *expr << std::endl;

@@ -31,38 +31,38 @@ void skip_whitespace(string_view & source, bool skip_newlines) {
 
 }
 
-enum class match_mode {
+enum class MatchMode {
 	end_of_file,
 	specific,
 	matching_bracket,
 	object_element,
 };
 
-class matcher {
+class Matcher {
 private:
-	match_mode mode_;
+	MatchMode mode_;
 	string_view expected_;
 	string_view matching_bracket_;
-	matcher const * or_before_ = nullptr;
+	Matcher const * or_before_ = nullptr;
 
 public:
-	explicit matcher(string_view expected)
-		: mode_(match_mode::specific), expected_(expected), matching_bracket_() {}
+	explicit Matcher(string_view expected)
+		: mode_(MatchMode::specific), expected_(expected), matching_bracket_() {}
 
-	matcher(match_mode mode, string_view expected = {}, string_view matching_bracket = {}, matcher const * or_before = nullptr)
+	Matcher(MatchMode mode, string_view expected = {}, string_view matching_bracket = {}, Matcher const * or_before = nullptr)
 		: mode_(mode), expected_(expected), matching_bracket_(matching_bracket), or_before_(or_before) {}
 
 	optional<string_view> try_parse(string_view & source, bool consume = true, bool eat_whitespace = true) const {
 		if (eat_whitespace) {
-			bool skip_newlines = mode_ != match_mode::object_element;
+			bool skip_newlines = mode_ != MatchMode::object_element;
 			skip_whitespace(source, skip_newlines);
 		}
 		switch (mode_) {
-			case match_mode::end_of_file:
+			case MatchMode::end_of_file:
 				if (source.empty()) return source;
 				break;
-			case match_mode::specific:
-			case match_mode::matching_bracket: {
+			case MatchMode::specific:
+			case MatchMode::matching_bracket: {
 				auto s = source.substr(0, expected_.size());
 				if (s == expected_) {
 					if (consume) source.remove_prefix(expected_.size());
@@ -70,7 +70,7 @@ public:
 				}
 				break;
 			}
-			case match_mode::object_element:
+			case MatchMode::object_element:
 				if (!source.empty()) switch (source[0]) {
 					case ',': case ';': case '\n': {
 						auto match = source.substr(0, 1);
@@ -95,28 +95,28 @@ public:
 
 	// Life time of the 'or before' matcher must be at least as long as
 	// the life time of this matcher.
-	matcher or_before(matcher const & alt) {
-		return matcher(mode_, expected_, matching_bracket_, &alt);
+	Matcher or_before(Matcher const & alt) {
+		return Matcher(mode_, expected_, matching_bracket_, &alt);
 	}
 
 	// Prevent taking temporaries.
-	matcher or_before(matcher const &&) = delete;
+	Matcher or_before(Matcher const &&) = delete;
 
 	std::string description() const {
 		std::string desc;
 		switch (mode_) {
-			case match_mode::end_of_file:
+			case MatchMode::end_of_file:
 				desc = "end of file";
 				break;
-			case match_mode::specific:
-			case match_mode::matching_bracket:
+			case MatchMode::specific:
+			case MatchMode::matching_bracket:
 				desc = "`" + std::string(expected_) + "'";
 				break;
-			case match_mode::object_element:
+			case MatchMode::object_element:
 				desc = "newline or `,' or `;'";
 				break;
 			default:
-				throw std::logic_error("match_mode");
+				throw std::logic_error("MatchMode");
 		}
 		if (or_before_) desc += " or " + or_before_->description();
 		return desc;
@@ -124,7 +124,7 @@ public:
 
 	ParseError error(string_view source) const {
 		std::vector<std::pair<std::string, string_view>> notes;
-		if (mode_ == match_mode::matching_bracket && !or_before_) {
+		if (mode_ == MatchMode::matching_bracket && !or_before_) {
 			notes = {{"... to match this `" + std::string(matching_bracket_) + "'", matching_bracket_}};
 		}
 		return ParseError(
@@ -136,9 +136,9 @@ public:
 
 };
 
-matcher match_end_of_file = conftaal::match_mode::end_of_file;
+Matcher match_end_of_file = conftaal::MatchMode::end_of_file;
 
-optional<string_view> parser::parse_end(matcher const & end, bool consume) {
+optional<string_view> Parser::parse_end(Matcher const & end, bool consume) {
 	auto m = end.try_parse(source_, consume);
 	if (!m && source_.empty()) {
 		throw end.error(source_);
@@ -146,11 +146,11 @@ optional<string_view> parser::parse_end(matcher const & end, bool consume) {
 	return m;
 }
 
-bool parser::is_identifier_start(char c) {
+bool Parser::is_identifier_start(char c) {
 	return isalpha(c) || c == '_';
 }
 
-string_view parser::parse_identifier(string_view & source) {
+string_view Parser::parse_identifier(string_view & source) {
 	auto const original_source = source;
 	while (!source.empty() && (isalpha(source[0]) || source[0] == '_' || isdigit(source[0]))) {
 		source.remove_prefix(1);
@@ -213,7 +213,7 @@ size_t encode_utf8(char32_t codepoint, char (& buffer)[4]) {
 
 }
 
-std::unique_ptr<StringLiteralExpression> parser::parse_string_literal() {
+std::unique_ptr<StringLiteralExpression> Parser::parse_string_literal() {
 	auto const original_source = source_;
 
 	char const quote = source_[0];
@@ -330,7 +330,7 @@ std::unique_ptr<StringLiteralExpression> parser::parse_string_literal() {
 	return std::make_unique<StringLiteralExpression>(value);
 }
 
-std::unique_ptr<Expression> parser::parse_number() {
+std::unique_ptr<Expression> Parser::parse_number() {
 
 	char const * source_begin = source_.data();
 
@@ -402,7 +402,7 @@ std::unique_ptr<Expression> parser::parse_number() {
 
 }
 
-std::unique_ptr<IdentifierExpression> parser::parse_identifier_expression(string_view & source) {
+std::unique_ptr<IdentifierExpression> Parser::parse_identifier_expression(string_view & source) {
 	auto identifier = parse_identifier(source);
 	if (!identifier.empty()) {
 		return std::make_unique<IdentifierExpression>(identifier);
@@ -411,13 +411,13 @@ std::unique_ptr<IdentifierExpression> parser::parse_identifier_expression(string
 	}
 }
 
-std::unique_ptr<Expression> parser::parse_expression_atom(matcher const & end) {
+std::unique_ptr<Expression> Parser::parse_expression_atom(Matcher const & end) {
 	if (parse_end(end, false)) return nullptr;
 
 	if (source_[0] == '(') {
 		auto open = source_.substr(0, 1);
 		source_.remove_prefix(1);
-		auto expr = parse_expression(matcher(match_mode::matching_bracket, ")", open));
+		auto expr = parse_expression(Matcher(MatchMode::matching_bracket, ")", open));
 		if (!expr) throw ParseError(
 			"missing expression between `(' and `)'",
 			string_view(open.data(), source_.data() - open.data() + 1)
@@ -443,12 +443,12 @@ std::unique_ptr<Expression> parser::parse_expression_atom(matcher const & end) {
 	} else if (source_[0] == '{') {
 		auto open = source_.substr(0, 1);
 		source_.remove_prefix(1);
-		return parse_object(matcher(match_mode::matching_bracket, "}", open));
+		return parse_object(Matcher(MatchMode::matching_bracket, "}", open));
 
 	} else if (source_[0] == '[') {
 		auto open = source_.substr(0, 1);
 		source_.remove_prefix(1);
-		return parse_list(matcher(match_mode::matching_bracket, "]", open));
+		return parse_list(Matcher(MatchMode::matching_bracket, "]", open));
 
 	} else if (source_[0] == '"') {
 		return parse_string_literal();
@@ -466,7 +466,7 @@ std::unique_ptr<Expression> parser::parse_expression_atom(matcher const & end) {
 
 }
 
-bool parser::parse_more_expression(std::unique_ptr<Expression> & expr, matcher const & end) {
+bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher const & end) {
 	if (parse_end(end)) return false;
 
 	switch (source_[0]) {
@@ -518,7 +518,7 @@ bool parser::parse_more_expression(std::unique_ptr<Expression> & expr, matcher c
 			std::unique_ptr<Expression> rhs;
 
 			if (op == "[" || op == "(") {
-				rhs = parse_list(matcher(match_mode::matching_bracket, op == "[" ? "]" : ")", op));
+				rhs = parse_list(Matcher(MatchMode::matching_bracket, op == "[" ? "]" : ")", op));
 			} else if (op == ".") {
 				rhs = parse_identifier_expression(source_);
 				if (!rhs) throw ParseError(
@@ -567,20 +567,20 @@ bool parser::parse_more_expression(std::unique_ptr<Expression> & expr, matcher c
 	);
 }
 
-std::unique_ptr<Expression> parser::parse_expression(matcher const & end) {
+std::unique_ptr<Expression> Parser::parse_expression(Matcher const & end) {
 	auto expr = parse_expression_atom(end);
 	if (expr) while (parse_more_expression(expr, end));
 	return expr;
 }
 
-std::unique_ptr<ObjectExpression> parser::parse_object(matcher const & end) {
+std::unique_ptr<ObjectExpression> Parser::parse_object(Matcher const & end) {
 	std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> values;
 	while (true) {
 		if (parse_end(end)) break;
 		auto name = parse_identifier(source_);
 		if (name.empty()) throw ParseError("expected identifier or " + end.description(), source_.substr(0, 0));
-		auto eq = matcher("=").parse(source_);
-		auto value = parse_expression(matcher(match_mode::object_element).or_before(end));
+		auto eq = Matcher("=").parse(source_);
+		auto value = parse_expression(Matcher(MatchMode::object_element).or_before(end));
 		if (!value) throw ParseError(
 			"missing expression after `='",
 			string_view(eq.data(), source_.data() - eq.data() + 1)
@@ -590,12 +590,12 @@ std::unique_ptr<ObjectExpression> parser::parse_object(matcher const & end) {
 	return std::make_unique<ObjectExpression>(std::move(values));
 }
 
-std::unique_ptr<ListExpression> parser::parse_list(matcher const & end) {
+std::unique_ptr<ListExpression> Parser::parse_list(Matcher const & end) {
 	std::vector<std::unique_ptr<Expression>> values;
 	while (true) {
 		char const * expression_begin = source_.data();
 		if (parse_end(end)) break;
-		auto value = parse_expression(matcher(",").or_before(end));
+		auto value = parse_expression(Matcher(",").or_before(end));
 		if (!value) throw ParseError(
 			"missing expression",
 			string_view(expression_begin, source_.data() - expression_begin + 1)
