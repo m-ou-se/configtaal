@@ -410,46 +410,46 @@ std::unique_ptr<IdentifierExpression> Parser::parse_identifier_expression(string
 
 namespace {
 
-operator_ unary_operator(string_view op) {
+Operator unary_operator(string_view op) {
 	switch (op[0]) {
-		case '+': return operator_::unary_plus;
-		case '-': return operator_::unary_minus;
-		case '!': return operator_::not_;
-		case '~': return operator_::complement;
+		case '+': return Operator::unary_plus;
+		case '-': return Operator::unary_minus;
+		case '!': return Operator::logical_not;
+		case '~': return Operator::complement;
 	}
 	assert(false);
 }
 
-operator_ binary_operator(string_view op) {
+Operator binary_operator(string_view op) {
 	switch (op[0]) {
-		case '.': return operator_::dot;
-		case '(': return operator_::call;
-		case '[': return operator_::index;
+		case '.': return Operator::dot;
+		case '(': return Operator::call;
+		case '[': return Operator::index;
 		case '*':
-			if (op.size() > 1 && op[1] == '*') return operator_::power;
-			return operator_::times;
-		case '/': return operator_::divide;
-		case '%': return operator_::modulo;
-		case '+': return operator_::plus;
-		case '-': return operator_::minus;
+			if (op.size() > 1 && op[1] == '*') return Operator::power;
+			return Operator::times;
+		case '/': return Operator::divide;
+		case '%': return Operator::modulo;
+		case '+': return Operator::plus;
+		case '-': return Operator::minus;
 		case '<':
-			if (op.size() > 1 && op[1] == '<') return operator_::left_shift;
-			return operator_::less;
+			if (op.size() > 1 && op[1] == '<') return Operator::left_shift;
+			return Operator::less;
 		case '>':
-			if (op.size() > 1 && op[1] == '>') return operator_::right_shift;
-			return operator_::greater;
+			if (op.size() > 1 && op[1] == '>') return Operator::right_shift;
+			return Operator::greater;
 		case '=': // ==
-			return operator_::equal;
+			return Operator::equal;
 		case '!': // !=
-			return operator_::inequal;
+			return Operator::inequal;
 		case '&':
-			if (op.size() > 1 && op[1] == '&') return operator_::and_;
-			return operator_::bit_and;
+			if (op.size() > 1 && op[1] == '&') return Operator::logical_and;
+			return Operator::bit_and;
 		case '^':
-			return operator_::bit_xor;
+			return Operator::bit_xor;
 		case '|':
-			if (op.size() > 1 && op[1] == '|') return operator_::or_;
-			return operator_::bit_or;
+			if (op.size() > 1 && op[1] == '|') return Operator::logical_not;
+			return Operator::bit_or;
 	}
 	assert(false);
 }
@@ -561,13 +561,13 @@ bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher c
 
 			source_.remove_prefix(op_source.size());
 
-			operator_ op = binary_operator(op_source);
+			Operator op = binary_operator(op_source);
 
 			std::unique_ptr<Expression> rhs;
 
 			if (op_source == "[" || op_source == "(") {
 				rhs = parse_list(Matcher(MatchMode::matching_bracket, op_source == "[" ? "]" : ")", op_source));
-			} else if (op == operator_::dot) {
+			} else if (op == Operator::dot) {
 				rhs = parse_identifier_expression(source_);
 				if (!rhs) throw ParseError(
 					"expected identifier after `.'",
