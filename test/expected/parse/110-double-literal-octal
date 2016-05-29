@@ -1,0 +1,3 @@
+tests/parse/110-double-literal-octal:1:1: error: floating point literals must be in decimal or hexadecimal, not in octal
+0o0.2
+^^^^^

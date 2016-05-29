@@ -354,7 +354,6 @@ std::unique_ptr<Expression> Parser::parse_number() {
 	bool is_integer = true;
 	string_view integer_part;
 	string_view fractional_part;
-	char const * exponent_sign = nullptr;
 	string_view exponent_part;
 
 	integer_part = source_.substr(0, source_.find_first_not_of(digits));
@@ -364,20 +363,17 @@ std::unique_ptr<Expression> Parser::parse_number() {
 		is_integer = false;
 		source_.remove_prefix(1);
 		fractional_part = source_.substr(0, source_.find_first_not_of(digits));
-		source_.remove_prefix(integer_part.size());
+		source_.remove_prefix(fractional_part.size());
 	}
 
 	if (!source_.empty() && (source_[0] == (base == 16 ? 'p' : 'e') || source_[0] == (base == 16 ? 'P' : 'E'))) {
 		is_integer = false;
 		source_.remove_prefix(1);
-		source_.remove_prefix(1);
-		if (!source_.empty() && (source_[0] == '+' || source_[0] == '-')) {
-			exponent_sign = source_.data();
-			source_.remove_prefix(1);
-		}
-		exponent_part = source_.substr(0, source_.find_first_not_of(decimal_digits));
-		if (exponent_part.empty()) throw ParseError("missing exponent", exponent_part);
-		source_.remove_prefix(integer_part.size());
+		size_t start = 0;
+		if (!source_.empty() && (source_[0] == '+' || source_[0] == '-')) start = 1;
+		exponent_part = source_.substr(0, source_.find_first_not_of(decimal_digits, start));
+		source_.remove_prefix(exponent_part.size());
+		if (exponent_part.size() <= start) throw ParseError("missing exponent", source_.substr(0, 0));
 	}
 
 	string_view literal_source(source_begin, source_.data() - source_begin);
@@ -394,12 +390,12 @@ std::unique_ptr<Expression> Parser::parse_number() {
 		}
 		return std::make_unique<IntegerLiteralExpression>(int64_t(value));
 	} else {
-		(void) fractional_part;
-		(void) exponent_sign;
-		(void) exponent_part;
-		throw ParseError("floating point literals are not yet implemented", literal_source);
+		if (base == 8) throw ParseError(
+			"floating point literals must be in decimal or hexadecimal, not in octal",
+			literal_source
+		);
+		return std::make_unique<DoubleLiteralExpression>(std::strtod(literal_source.to_string().data(), nullptr));
 	}
-
 }
 
 std::unique_ptr<IdentifierExpression> Parser::parse_identifier_expression(string_view & source) {
