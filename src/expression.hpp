@@ -6,6 +6,8 @@
 
 #include <string_view.hpp>
 
+#include "operator.hpp"
+
 namespace conftaal {
 
 class Expression {
@@ -24,12 +26,14 @@ class OperatorExpression final : public Expression {
 	// Represents both binary and unary operator expressions.
 public:
 	OperatorExpression(
-		string_view op,
+		operator_ op,
+		string_view op_source,
 		std::unique_ptr<Expression> lhs,
 		std::unique_ptr<Expression> rhs
-	) : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+	) : op(op), op_source(op_source), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-	string_view op;
+	operator_ op;
+	string_view op_source;
 	std::unique_ptr<Expression> lhs;
 	std::unique_ptr<Expression> rhs;
 

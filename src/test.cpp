@@ -14,7 +14,7 @@ namespace conftaal {
 
 std::ostream & operator << (std::ostream & out, Expression const & expr) {
 	if (auto e = dynamic_cast<OperatorExpression const *>(&expr)) {
-		out << '(' << e->op << ' ';
+		out << '(' << e->op_source << ' ';
 		if (!e->is_unary()) {
 			out << *e->lhs << ' ';
 		}
