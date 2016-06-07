@@ -1,3 +1,6 @@
 [submodule "third-party/stringpool"]
 	path = third-party/stringpool
 	url = https://github.com/m-ou-se/string-pool
+[submodule "third-party/mstd"]
+	path = third-party/mstd
+	url = https://github.com/m-ou-se/mstd
