@@ -9,6 +9,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 add_subdirectory(third-party/stringpool)
+include_directories(third-party/mstd/include)
 
 add_library(configtaal-parser STATIC
 	src/operator.cpp
