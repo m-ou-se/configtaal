@@ -5,32 +5,17 @@
 #include <vector>
 
 #include <optional.hpp>
-#include <string_view.hpp>
 #include <string_tracker.hpp>
+#include <string_view.hpp>
 
+#include "error.hpp"
 #include "expression.hpp"
 
 namespace conftaal {
 
-class ParseError : public std::runtime_error {
-
-private:
-	string_view where_;
-
-	// ('where', message) pairs
-	std::vector<std::pair<std::string, string_view>> notes_;
-
+class ParseError : public Error {
 public:
-	ParseError(
-		std::string what,
-		string_view where,
-		std::vector<std::pair<std::string, string_view>> notes = {}
-	) : std::runtime_error(std::move(what)), where_(where), notes_(std::move(notes)) {}
-
-	string_view where() const { return where_; }
-
-	std::vector<std::pair<std::string, string_view>> const & notes() const { return notes_; }
-
+	using Error::Error;
 };
 
 class Matcher;
