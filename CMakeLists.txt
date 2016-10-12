@@ -8,14 +8,14 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-sign-compare")
 endif()
 
+add_subdirectory(third-party/mstd)
 add_subdirectory(third-party/stringpool)
-include_directories(third-party/mstd/include)
 
 add_library(conftaal-parser STATIC
 	src/operator.cpp
 	src/parse.cpp
 )
-target_link_libraries(conftaal-parser string_tracker)
+target_link_libraries(conftaal-parser mstd string_tracker)
 
 add_executable(conftaal-test
 	src/print_error.cpp
