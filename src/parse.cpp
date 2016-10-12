@@ -563,7 +563,7 @@ bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher c
 
 			Operator op = binary_operator(op_source);
 
-			std::unique_ptr<Expression> rhs;
+			refcount_ptr<Expression const> rhs;
 
 			if (op_source == "[" || op_source == "(") {
 				rhs = parse_list(Matcher(MatchMode::matching_bracket, op_source == "[" ? "]" : ")", op_source));
@@ -581,13 +581,16 @@ bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher c
 				);
 			}
 
+			refcount_ptr<Expression const> rexpr(std::move(expr));
+
 			// Find the expression to use as left hand side.
 			// Often it is the entire expression expr,
 			// but depending on the precedence of operators,
 			// it might be just a subexpresssion of expr.
-			std::unique_ptr<Expression> * lhs = &expr;
+			refcount_ptr<Expression const> * lhs = &rexpr;
 			while (true) {
-				auto e = dynamic_cast<OperatorExpression *>(lhs->get());
+				assert(lhs->unique());
+				auto e = dynamic_cast<OperatorExpression *>(lhs->unique());
 				if (!e) break;
 				if (e->parenthesized) break;
 				auto p = higher_precedence(e->op, op);
@@ -604,6 +607,9 @@ bool Parser::parse_more_expression(std::unique_ptr<Expression> & expr, Matcher c
 
 			// Replace the expression by an operator_expression that uses it as the left hand side.
 			*lhs = std::make_unique<OperatorExpression>(op, op_source, std::move(*lhs), std::move(rhs));
+
+			expr = rexpr.release_unique();
+			assert(expr);
 
 			return true;
 		}
@@ -622,7 +628,8 @@ std::unique_ptr<Expression> Parser::parse_expression(Matcher const & end) {
 }
 
 std::unique_ptr<ObjectExpression> Parser::parse_object(Matcher const & end) {
-	std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> values;
+	std::vector<refcount_ptr<Expression const>> keys;
+	std::vector<refcount_ptr<Expression const>> values;
 	while (true) {
 		if (parse_end(end)) break;
 		auto name = parse_identifier(source_);
@@ -633,13 +640,17 @@ std::unique_ptr<ObjectExpression> Parser::parse_object(Matcher const & end) {
 			"missing expression after `='",
 			string_view(eq.data(), source_.data() - eq.data() + 1)
 		);
-		values.emplace_back(std::make_unique<StringLiteralExpression>(name), std::move(value));
+		keys.push_back(std::make_unique<StringLiteralExpression>(name));
+		values.push_back(std::move(value));
 	}
-	return std::make_unique<ObjectExpression>(std::move(values));
+	return std::make_unique<ObjectExpression>(
+		std::make_unique<ListExpression>(std::move(keys)),
+		std::make_unique<ListExpression>(std::move(values))
+	);
 }
 
 std::unique_ptr<ListExpression> Parser::parse_list(Matcher const & end) {
-	std::vector<std::unique_ptr<Expression>> values;
+	std::vector<refcount_ptr<Expression const>> elements;
 	while (true) {
 		char const * expression_begin = source_.data();
 		if (parse_end(end)) break;
@@ -648,9 +659,9 @@ std::unique_ptr<ListExpression> Parser::parse_list(Matcher const & end) {
 			"missing expression",
 			string_view(expression_begin, source_.data() - expression_begin + 1)
 		);
-		values.push_back(std::move(value));
+		elements.push_back(std::move(value));
 	}
-	return std::make_unique<ListExpression>(std::move(values));
+	return std::make_unique<ListExpression>(std::move(elements));
 }
 
 }

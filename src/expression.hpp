@@ -1,23 +1,32 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <vector>
 
 #include <string_view.hpp>
+#include <mstd/refcount.hpp>
 
 #include "operator.hpp"
 
 namespace conftaal {
 
-class Expression {
+using mstd::refcounted;
+using mstd::refcount_ptr;
+using mstd::take_or_copy;
+using mstd::static_pointer_cast;
+using mstd::dynamic_pointer_cast;
+
+class Expression : public refcounted {
 public:
 	virtual ~Expression() {}
 };
 
 class IdentifierExpression final : public Expression {
 public:
-	explicit IdentifierExpression(string_view identifier) : identifier(identifier) {}
+	explicit IdentifierExpression(string_view identifier)
+		: identifier(identifier) {}
 
 	string_view identifier;
 };
@@ -28,14 +37,14 @@ public:
 	OperatorExpression(
 		Operator op,
 		string_view op_source,
-		std::unique_ptr<Expression> lhs,
-		std::unique_ptr<Expression> rhs
+		refcount_ptr<Expression const> lhs,
+		refcount_ptr<Expression const> rhs
 	) : op(op), op_source(op_source), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
 	Operator op;
 	string_view op_source;
-	std::unique_ptr<Expression> lhs;
-	std::unique_ptr<Expression> rhs;
+	refcount_ptr<Expression const> lhs;
+	refcount_ptr<Expression const> rhs;
 
 	bool parenthesized = false;
 
@@ -69,22 +78,26 @@ public:
 	string_view value;
 };
 
-class ObjectExpression final : public Expression {
-public:
-	explicit ObjectExpression(
-		std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> elements
-	) : elements(std::move(elements)) {}
-
-	std::vector<std::pair<std::unique_ptr<Expression>, std::unique_ptr<Expression>>> elements;
-};
-
 class ListExpression final : public Expression {
 public:
 	explicit ListExpression(
-		std::vector<std::unique_ptr<Expression>> elements
+		std::vector<refcount_ptr<Expression const>> elements
 	) : elements(std::move(elements)) {}
 
-	std::vector<std::unique_ptr<Expression>> elements;
+	std::vector<refcount_ptr<Expression const>> elements;
+};
+
+class ObjectExpression final : public Expression {
+public:
+	ObjectExpression(
+		refcount_ptr<ListExpression const> keys,
+		refcount_ptr<ListExpression const> values
+	) : keys(std::move(keys)), values(std::move(values)) {
+		assert(this->keys->elements.size() == this->values->elements.size());
+	}
+
+	refcount_ptr<ListExpression const> keys;
+	refcount_ptr<ListExpression const> values;
 };
 
 }
