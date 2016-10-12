@@ -23,8 +23,8 @@ std::ostream & operator << (std::ostream & out, Expression const & expr) {
 		out << "(ref " << e->identifier << ')';
 	} else if (auto e = dynamic_cast<ObjectExpression const *>(&expr)) {
 		out << "(object";
-		for (auto const & v : e->elements) {
-			out << ' ' << *v.first << '=' << *v.second;
+		for (size_t i = 0; i < e->values->elements.size(); ++i) {
+			out << ' ' << *e->keys->elements[i] << '=' << *e->values->elements[i];
 		}
 		out << ')';
 	} else if (auto e = dynamic_cast<ListExpression const *>(&expr)) {
