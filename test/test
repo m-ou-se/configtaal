@@ -58,56 +58,56 @@ set +e
 
 for dir in "${tests[@]}"; do
 
-passed=0
-failed=0
+	passed=0
+	failed=0
 
-if [ -d "tests/$dir" ]; then
+	if [ -d "tests/$dir" ]; then
 
-mkdir "test-output/$dir" "test-diff/$dir"
+		mkdir "test-output/$dir" "test-diff/$dir"
 
-if [ -f "tests/$dir"-flags ]; then
-	flags="$(<"tests/$dir"-flags)"
-else
-	flags=''
-fi
+		if [ -f "tests/$dir"-flags ]; then
+			flags="$(<"tests/$dir"-flags)"
+		else
+			flags=''
+		fi
 
-for t in "tests/$dir"/*; do
-	t="$dir/${t##*/}"
-	echo -n "[....] $t"
-	$program $flags "tests/$t" &> "test-output/$t"
-	r=$?
-	if [ $r != 0 ]; then
-		fail
-		echo "Program exited with non-zero status code ($r)"
-		echo "Program was invoked as: $program $flags \"tests/$t\""
-	elif [ $update == 1 ]; then
-		pass
-		cp "test-output/$t" "$testdir/expected/$t"
-	elif [ ! -f "$testdir/expected/$t" ]; then
-		echo -e "\r[\033[1;34m????\033[m] $t - no expected output available, got:"
-		cat "test-output/$t"
-	elif $diff "$testdir/expected/$t" "test-output/$t" > "test-diff/$t.diff"; then
-		pass
+		for t in "tests/$dir"/*; do
+			t="$dir/${t##*/}"
+			echo -n "[....] $t"
+			$program $flags "tests/$t" &> "test-output/$t"
+			r=$?
+			if [ $r != 0 ]; then
+				fail
+				echo "Program exited with non-zero status code ($r)"
+				echo "Program was invoked as: $program $flags \"tests/$t\""
+			elif [ $update == 1 ]; then
+				pass
+				cp "test-output/$t" "$testdir/expected/$t"
+			elif [ ! -f "$testdir/expected/$t" ]; then
+				echo -e "\r[\033[1;34m????\033[m] $t - no expected output available, got:"
+				cat "test-output/$t"
+			elif $diff "$testdir/expected/$t" "test-output/$t" > "test-diff/$t.diff"; then
+				pass
+			else
+				fail
+				tail -n+5 test-diff/$t.diff
+			fi
+		done
+
 	else
+
+		echo -n "[....] No such directory: tests/$dir"
 		fail
-		tail -n+5 test-diff/$t.diff
+
 	fi
-done
 
-else
-
-echo -n "[....] No such directory: tests/$dir"
-fail
-
-fi
-
-if [ ${#tests[@]} -gt 1 ]; then
-	if [ $failed -gt 0 ]; then
-		echo -e "[\033[1;31m$failed $dir TEST(S) FAILED\033[m]\n";
-	else
-		echo -e "[\033[1;32mALL $passed $dir TESTS PASSED\033[m]\n";
+	if [ ${#tests[@]} -gt 1 ]; then
+		if [ $failed -gt 0 ]; then
+			echo -e "[\033[1;31m$failed $dir TEST(S) FAILED\033[m]\n";
+		else
+			echo -e "[\033[1;32mALL $passed $dir TESTS PASSED\033[m]\n";
+		fi
 	fi
-fi
 
 done
 
