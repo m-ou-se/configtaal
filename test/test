@@ -52,9 +52,6 @@ diff='git -c color.diff.old=green -c color.diff.new=red --no-pager diff -U1 --no
 
 rm -rf test-output test-diff
 mkdir test-output test-diff
-for dir in $tests; do
-	mkdir "test-output/$dir" "test-diff/$dir"
-done
 ln -sfT "$testdir/tests" tests
 
 set +e
@@ -65,6 +62,8 @@ passed=0
 failed=0
 
 if [ -d "tests/$dir" ]; then
+
+mkdir "test-output/$dir" "test-diff/$dir"
 
 if [ -f "tests/$dir"-flags ]; then
 	flags="$(<"tests/$dir"-flags)"
@@ -80,6 +79,7 @@ for t in "tests/$dir"/*; do
 	if [ $r != 0 ]; then
 		fail
 		echo "Program exited with non-zero status code ($r)"
+		echo "Program was invoked as: $program $flags \"tests/$t\""
 	elif [ $update == 1 ]; then
 		pass
 		cp "test-output/$t" "$testdir/expected/$t"
