@@ -1,1 +1,1 @@
-(** (ref a) (** (ref b) (ref c)))
+(op** id:a (op** id:b id:c))

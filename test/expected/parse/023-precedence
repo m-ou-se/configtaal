@@ -1,1 +1,1 @@
-(& (- (- (+ (+ (+ (ref a) (ref x)) (* (* (ref b) (ref x)) (** (ref d) (** (ref x) (** (ref y) (( (ref c) (list (+ (* (** (ref foo) (ref e)) (ref bar)) (ref quux))))))))) (~ (ref hello))) (- (! (! (ref world))))) (ref x)) (+ (ref test) (ref foobar)))
+(op& (op- (op- (op+ (op+ (op+ id:a id:x) (op* (op* id:b id:x) (op** id:d (op** id:x (op** id:y (op( id:c (list (op+ (op* (op** id:foo id:e) id:bar) id:quux)))))))) (op~ id:hello)) (op- (op! (op! id:world)))) id:x) (op+ id:test id:foobar))
