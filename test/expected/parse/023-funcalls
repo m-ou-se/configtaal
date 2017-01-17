@@ -1,1 +1,1 @@
-(( (ref func) (list (ref foo) (( (ref bar) (list (ref hello) (ref world))) (( (ref func) (list))))
+(op( id:func (list id:foo (op( id:bar (list id:hello id:world)) (op( id:func (list))))

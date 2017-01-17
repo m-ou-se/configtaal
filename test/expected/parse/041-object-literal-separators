@@ -1,1 +1,1 @@
-(object "foo"=(ref bar) "baz"=(ref hello) "world"=(ref pizza) "pizza"=(ref test))
+(object keys=(list str:"foo" str:"baz" str:"world" str:"pizza") values=(list id:bar id:hello id:pizza id:test))

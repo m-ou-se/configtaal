@@ -1,1 +1,1 @@
-(list (ref hello) (ref world) (ref test))
+(list id:hello id:world id:test)

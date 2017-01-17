@@ -1,1 +1,1 @@
-(object "hello"=(+ (ref world) (ref test)) "test"=(+ (* (ref foo) (ref bar)) (+ (ref hello) (ref world))) "test2"=(+ (( (ref func) (list (ref a) (ref b) (ref c))) (ref i)))
+(object keys=(list str:"hello" str:"test" str:"test2") values=(list (op+ id:world id:test) (op+ (op* id:foo id:bar) (op+ id:hello id:world)) (op+ (op( id:func (list id:a id:b id:c)) id:i)))

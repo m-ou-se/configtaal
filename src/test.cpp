@@ -14,19 +14,15 @@ namespace conftaal {
 
 std::ostream & operator << (std::ostream & out, Expression const & expr) {
 	if (auto e = dynamic_cast<OperatorExpression const *>(&expr)) {
-		out << '(' << e->op_source << ' ';
+		out << "(op" << e->op_source << ' ';
 		if (!e->is_unary()) {
 			out << *e->lhs << ' ';
 		}
 		out << *e->rhs << ')';
 	} else if (auto e = dynamic_cast<IdentifierExpression const *>(&expr)) {
-		out << "(ref " << e->identifier << ')';
+		out << "id:" << e->identifier;
 	} else if (auto e = dynamic_cast<ObjectExpression const *>(&expr)) {
-		out << "(object";
-		for (size_t i = 0; i < e->values->elements.size(); ++i) {
-			out << ' ' << *e->keys->elements[i] << '=' << *e->values->elements[i];
-		}
-		out << ')';
+		out << "(object keys=" << *e->keys << " values=" << *e->values << ')';
 	} else if (auto e = dynamic_cast<ListExpression const *>(&expr)) {
 		out << "(list";
 		for (auto const & v : e->elements) {
@@ -34,11 +30,11 @@ std::ostream & operator << (std::ostream & out, Expression const & expr) {
 		}
 		out << ')';
 	} else if (auto e = dynamic_cast<StringLiteralExpression const *>(&expr)) {
-		out << std::quoted(std::string(e->value));
+		out << "str:" << std::quoted(std::string(e->value));
 	} else if (auto e = dynamic_cast<IntegerLiteralExpression const *>(&expr)) {
-		out << e->value;
+		out << "int:" << e->value;
 	} else if (auto e = dynamic_cast<DoubleLiteralExpression const *>(&expr)) {
-		out << std::hexfloat << e->value;
+		out << "float:" << std::hexfloat << e->value;
 	}
 	return out;
 }
