@@ -25,7 +25,7 @@ if [ ${#tests[@]} -eq 0 ]; then
 fi
 
 if [ -z "$1" ]; then
-	echo "Usage: $0 [-u|--update-expected] [(-t|--test) <test-set>] <program>"
+	echo "Usage: $0 [-u|--update-expected] [(-t|--test) <test-set>]... <program>"
 	exit 1
 fi
 
