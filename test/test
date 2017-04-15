@@ -74,12 +74,13 @@ for dir in "${tests[@]}"; do
 		for t in "tests/$dir"/*; do
 			t="$dir/${t##*/}"
 			echo -n "[....] $t"
-			$program $flags "tests/$t" &> "test-output/$t"
+			{ $program $flags "tests/$t"; } &> "test-output/$t"
 			r=$?
 			if [ $r != 0 ]; then
 				fail
-				echo "Program exited with non-zero status code ($r)"
-				echo "Program was invoked as: $program $flags \"tests/$t\""
+				echo -e "\033[31mProgram exited with non-zero status code ($r). The output was:\033[m"
+				cat "test-output/$t"
+				echo -e "\033[31mProgram was invoked as: $program $flags \"tests/$t\"\033[m"
 			elif [ $update == 1 ]; then
 				pass
 				cp "test-output/$t" "$testdir/expected/$t"
