@@ -9,6 +9,7 @@ namespace conftaal {
 int get_precedence(Operator op) {
 	switch (op) {
 		case Operator::dot:
+		case Operator::colon:
 		case Operator::call:
 		case Operator::index:
 			return 1;
