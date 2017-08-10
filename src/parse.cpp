@@ -425,6 +425,7 @@ Operator binary_operator(string_view op) {
 		case '.': return Operator::dot;
 		case '(': return Operator::call;
 		case '[': return Operator::index;
+		case ':': return Operator::colon;
 		case '*':
 			if (op.size() > 1 && op[1] == '*') return Operator::power;
 			return Operator::times;

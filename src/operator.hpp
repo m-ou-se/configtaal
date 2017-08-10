@@ -8,6 +8,7 @@ enum class Operator {
 	/* .  */ dot,
 	/* [] */ index,
 	/* () */ call,
+	/* :  */ colon,
 	/* == */ equal,
 	/* != */ inequal,
 	/* >  */ greater,
