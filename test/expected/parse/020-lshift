@@ -1,1 +1,1 @@
-(op<< id:foo id:bar)
+(op:left_shift id:foo id:bar)

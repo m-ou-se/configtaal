@@ -1,1 +1,1 @@
-(op( id:func (list id:foo (op( id:bar (list id:hello id:world)) (op( id:func (list))))
+(op:call id:func (list id:foo (op:call id:bar (list id:hello id:world)) (op:call id:func (list))))

@@ -1,1 +1,1 @@
-(op+ id:foo id:bar)
+(op:plus id:foo id:bar)

@@ -1,1 +1,1 @@
-(op: id:foo id:bar)
+(op:colon id:foo id:bar)

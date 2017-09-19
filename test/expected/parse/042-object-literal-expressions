@@ -1,1 +1,1 @@
-(object keys=(list str:"hello" str:"test" str:"test2") values=(list (op+ id:world id:test) (op+ (op* id:foo id:bar) (op+ id:hello id:world)) (op+ (op( id:func (list id:a id:b id:c)) id:i)))
+(object keys=(list str:"hello" str:"test" str:"test2") values=(list (op:plus id:world id:test) (op:plus (op:times id:foo id:bar) (op:plus id:hello id:world)) (op:plus (op:call id:func (list id:a id:b id:c)) id:i)))

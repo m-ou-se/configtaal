@@ -14,40 +14,40 @@ namespace conftaal {
 
 char const * op_str(Operator op) {
 	switch (op) {
-		case Operator::dot:              return ".";
-		case Operator::index:            return "[";
-		case Operator::call:             return "(";
-		case Operator::colon:            return ":";
-		case Operator::equal:            return "==";
-		case Operator::inequal:          return "!=";
-		case Operator::greater:          return ">";
-		case Operator::less:             return "<";
-		case Operator::greater_or_equal: return ">=";
-		case Operator::less_or_equal:    return "<=";
-		case Operator::unary_plus:       return "+";
-		case Operator::unary_minus:      return "-";
-		case Operator::complement:       return "~";
-		case Operator::logical_not:      return "!";
-		case Operator::plus:             return "+";
-		case Operator::minus:            return "-";
-		case Operator::times:            return "*";
-		case Operator::divide:           return "/";
-		case Operator::modulo:           return "%";
-		case Operator::power:            return "**";
-		case Operator::left_shift:       return "<<";
-		case Operator::right_shift:      return ">>";
-		case Operator::bit_and:          return "&";
-		case Operator::bit_or:           return "|";
-		case Operator::bit_xor:          return "^";
-		case Operator::logical_and:      return "&&";
-		case Operator::logical_or:       return "||";
+		case Operator::dot:              return "dot";
+		case Operator::index:            return "index";
+		case Operator::call:             return "call";
+		case Operator::colon:            return "colon";
+		case Operator::equal:            return "equal";
+		case Operator::inequal:          return "inequal";
+		case Operator::greater:          return "greater";
+		case Operator::less:             return "less";
+		case Operator::greater_or_equal: return "greater_or_equal";
+		case Operator::less_or_equal:    return "less_or_equal";
+		case Operator::unary_plus:       return "unary_plus";
+		case Operator::unary_minus:      return "unary_minus";
+		case Operator::complement:       return "complement";
+		case Operator::logical_not:      return "logical_not";
+		case Operator::plus:             return "plus";
+		case Operator::minus:            return "minus";
+		case Operator::times:            return "times";
+		case Operator::divide:           return "divide";
+		case Operator::modulo:           return "modulo";
+		case Operator::power:            return "power";
+		case Operator::left_shift:       return "left_shift";
+		case Operator::right_shift:      return "right_shift";
+		case Operator::bit_and:          return "bit_and";
+		case Operator::bit_or:           return "bit_or";
+		case Operator::bit_xor:          return "bit_xor";
+		case Operator::logical_and:      return "logical_and";
+		case Operator::logical_or:       return "logical_or";
 	}
 	return "???";
 }
 
 std::ostream & operator << (std::ostream & out, Expression const & expr) {
 	if (auto e = dynamic_cast<OperatorExpression const *>(&expr)) {
-		out << "(op" << op_str(e->op) << ' ';
+		out << "(op:" << op_str(e->op) << ' ';
 		if (!e->is_unary()) {
 			out << *e->lhs << ' ';
 		}

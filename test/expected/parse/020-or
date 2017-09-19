@@ -1,1 +1,1 @@
-(op|| id:foo id:bar)
+(op:logical_or id:foo id:bar)

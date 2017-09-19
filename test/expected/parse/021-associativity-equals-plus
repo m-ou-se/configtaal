@@ -1,1 +1,1 @@
-(op== (op+ id:a id:b) id:c)
+(op:equal (op:plus id:a id:b) id:c)

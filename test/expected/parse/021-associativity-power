@@ -1,1 +1,1 @@
-(op** id:a (op** id:b id:c))
+(op:power id:a (op:power id:b id:c))

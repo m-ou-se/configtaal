@@ -1,1 +1,1 @@
-(op> id:foo id:bar)
+(op:greater id:foo id:bar)

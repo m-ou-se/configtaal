@@ -1,1 +1,1 @@
-(op& id:foo id:bar)
+(op:bit_and id:foo id:bar)
