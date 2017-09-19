@@ -12,9 +12,42 @@
 
 namespace conftaal {
 
+char const * op_str(Operator op) {
+	switch (op) {
+		case Operator::dot:              return ".";
+		case Operator::index:            return "[";
+		case Operator::call:             return "(";
+		case Operator::colon:            return ":";
+		case Operator::equal:            return "==";
+		case Operator::inequal:          return "!=";
+		case Operator::greater:          return ">";
+		case Operator::less:             return "<";
+		case Operator::greater_or_equal: return ">=";
+		case Operator::less_or_equal:    return "<=";
+		case Operator::unary_plus:       return "+";
+		case Operator::unary_minus:      return "-";
+		case Operator::complement:       return "~";
+		case Operator::logical_not:      return "!";
+		case Operator::plus:             return "+";
+		case Operator::minus:            return "-";
+		case Operator::times:            return "*";
+		case Operator::divide:           return "/";
+		case Operator::modulo:           return "%";
+		case Operator::power:            return "**";
+		case Operator::left_shift:       return "<<";
+		case Operator::right_shift:      return ">>";
+		case Operator::bit_and:          return "&";
+		case Operator::bit_or:           return "|";
+		case Operator::bit_xor:          return "^";
+		case Operator::logical_and:      return "&&";
+		case Operator::logical_or:       return "||";
+	}
+	return "???";
+}
+
 std::ostream & operator << (std::ostream & out, Expression const & expr) {
 	if (auto e = dynamic_cast<OperatorExpression const *>(&expr)) {
-		out << "(op" << e->op_source << ' ';
+		out << "(op" << op_str(e->op) << ' ';
 		if (!e->is_unary()) {
 			out << *e->lhs << ' ';
 		}

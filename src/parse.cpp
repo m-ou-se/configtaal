@@ -434,10 +434,16 @@ Operator binary_operator(string_view op) {
 		case '+': return Operator::plus;
 		case '-': return Operator::minus;
 		case '<':
-			if (op.size() > 1 && op[1] == '<') return Operator::left_shift;
+			if (op.size() > 1) {
+				if (op[1] == '<') return Operator::left_shift;
+				if (op[1] == '=') return Operator::less_or_equal;
+			}
 			return Operator::less;
 		case '>':
-			if (op.size() > 1 && op[1] == '>') return Operator::right_shift;
+			if (op.size() > 1) {
+				if (op[1] == '>') return Operator::right_shift;
+				if (op[1] == '=') return Operator::greater_or_equal;
+			}
 			return Operator::greater;
 		case '=': // ==
 			return Operator::equal;
@@ -449,7 +455,7 @@ Operator binary_operator(string_view op) {
 		case '^':
 			return Operator::bit_xor;
 		case '|':
-			if (op.size() > 1 && op[1] == '|') return Operator::logical_not;
+			if (op.size() > 1 && op[1] == '|') return Operator::logical_or;
 			return Operator::bit_or;
 	}
 	assert(false);
