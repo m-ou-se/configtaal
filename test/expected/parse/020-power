@@ -1,1 +1,1 @@
-(op** id:foo id:bar)
+(op:power id:foo id:bar)

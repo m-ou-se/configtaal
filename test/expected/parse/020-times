@@ -1,1 +1,1 @@
-(op* id:foo id:bar)
+(op:times id:foo id:bar)
