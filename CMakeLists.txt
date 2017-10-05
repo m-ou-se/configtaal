@@ -8,7 +8,10 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-sign-compare")
 endif()
 
-add_subdirectory(third-party/mstd)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mstd/CMakeLists.txt)
+	add_subdirectory(mstd)
+endif()
+
 add_subdirectory(third-party/stringpool)
 
 add_library(conftaal-parser STATIC
