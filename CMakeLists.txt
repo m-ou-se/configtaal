@@ -17,11 +17,11 @@ add_subdirectory(third-party/stringpool)
 add_library(conftaal-parser STATIC
 	src/operator.cpp
 	src/parse.cpp
+	src/print_error.cpp
 )
 target_link_libraries(conftaal-parser mstd string_tracker)
 
 add_executable(conftaal-test
-	src/print_error.cpp
 	src/test.cpp
 )
 target_link_libraries(conftaal-test conftaal-parser)
