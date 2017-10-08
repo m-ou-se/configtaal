@@ -11,7 +11,7 @@ endif()
 find_package(mstd)
 find_package(stringpool)
 
-add_library(conftaal-parser STATIC
+add_library(conftaal-parser
 	src/operator.cpp
 	src/parse.cpp
 	src/print_error.cpp
