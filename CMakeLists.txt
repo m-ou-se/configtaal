@@ -16,7 +16,7 @@ add_library(conftaal-parser
 	src/parse.cpp
 	src/print_error.cpp
 )
-target_link_libraries(conftaal-parser mstd string_tracker)
+target_link_libraries(conftaal-parser mstd stringpool::string_tracker)
 
 add_executable(conftaal-test
 	src/test.cpp
