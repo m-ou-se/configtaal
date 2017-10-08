@@ -7,6 +7,7 @@
 #include "print_error.hpp"
 
 using mstd::string_view;
+using string_pool::string_tracker;
 
 namespace conftaal {
 

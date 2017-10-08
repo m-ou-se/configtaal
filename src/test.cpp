@@ -10,6 +10,8 @@
 #include "parse.hpp"
 #include "print_error.hpp"
 
+using string_pool::string_tracker;
+
 namespace conftaal {
 
 char const * op_str(Operator op) {
