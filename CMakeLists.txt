@@ -8,8 +8,12 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-sign-compare")
 endif()
 
-find_package(mstd)
-find_package(stringpool)
+if (NOT TARGET mstd)
+	find_package(mstd)
+endif()
+if (NOT TARGET stringpool::string_pool)
+	find_package(stringpool)
+endif()
 
 add_library(conftaal-parser
 	src/operator.cpp
@@ -24,13 +28,13 @@ add_executable(conftaal-test
 target_link_libraries(conftaal-test conftaal-parser)
 
 add_custom_target(check
-	COMMAND "${CMAKE_SOURCE_DIR}/test/test" "$<TARGET_FILE:conftaal-test>"
+	COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "$<TARGET_FILE:conftaal-test>"
 	DEPENDS conftaal-test
 	USES_TERMINAL
 )
 
 add_custom_target(update-tests
-	COMMAND "${CMAKE_SOURCE_DIR}/test/test" "--update-expected" "$<TARGET_FILE:conftaal-test>"
+	COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "--update-expected" "$<TARGET_FILE:conftaal-test>"
 	DEPENDS conftaal-test
 	USES_TERMINAL
 )
