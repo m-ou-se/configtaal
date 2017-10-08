@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string_view.hpp>
-
 namespace conftaal {
 
 enum class Operator {
