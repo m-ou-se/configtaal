@@ -13,6 +13,8 @@
 
 namespace conftaal {
 
+using string_pool::string_tracker;
+
 class ParseError : public Error {
 public:
 	using Error::Error;
