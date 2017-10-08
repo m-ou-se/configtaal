@@ -4,13 +4,15 @@
 #include <limits>
 #include <stdexcept>
 
-#include <string_view.hpp>
+#include <mstd/optional.hpp>
+#include <mstd/string_view.hpp>
 #include <string_tracker.hpp>
-#include <optional.hpp>
 
 #include "expression.hpp"
 #include "operator.hpp"
 #include "parse.hpp"
+
+using mstd::string_view;
 
 namespace conftaal {
 
@@ -53,7 +55,7 @@ public:
 	Matcher(MatchMode mode, string_view expected = {}, string_view matching_bracket = {}, Matcher const * or_before = nullptr)
 		: mode_(mode), expected_(expected), matching_bracket_(matching_bracket), or_before_(or_before) {}
 
-	optional<string_view> try_parse(string_view & source, bool consume = true, bool eat_whitespace = true) const {
+	mstd::optional<string_view> try_parse(string_view & source, bool consume = true, bool eat_whitespace = true) const {
 		if (eat_whitespace) {
 			bool skip_newlines = mode_ != MatchMode::object_element;
 			skip_whitespace(source, skip_newlines);
@@ -85,7 +87,7 @@ public:
 			auto m = or_before_->try_parse(source, false, false);
 			if (m) return m->substr(0, 0);
 		}
-		return nullopt;
+		return {};
 	}
 
 	string_view parse(string_view & source, bool consume = true) const {
@@ -139,7 +141,7 @@ public:
 
 Matcher match_end_of_file = conftaal::MatchMode::end_of_file;
 
-optional<string_view> Parser::parse_end(Matcher const & end, bool consume) {
+mstd::optional<string_view> Parser::parse_end(Matcher const & end, bool consume) {
 	auto m = end.try_parse(source_, consume);
 	if (!m && source_.empty()) {
 		throw end.error(source_);

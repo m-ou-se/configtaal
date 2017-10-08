@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
 
-#include <string_view.hpp>
+#include <mstd/string_view.hpp>
 #include <string_tracker.hpp>
 
 #include "print_error.hpp"
+
+using mstd::string_view;
 
 namespace conftaal {
 

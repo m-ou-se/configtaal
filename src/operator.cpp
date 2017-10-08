@@ -1,7 +1,5 @@
 #include <cassert>
 
-#include <string_view.hpp>
-
 #include "operator.hpp"
 
 namespace conftaal {

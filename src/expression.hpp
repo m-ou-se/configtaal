@@ -5,13 +5,14 @@
 #include <memory>
 #include <vector>
 
-#include <string_view.hpp>
+#include <mstd/string_view.hpp>
 #include <mstd/refcount.hpp>
 
 #include "operator.hpp"
 
 namespace conftaal {
 
+using mstd::string_view;
 using mstd::refcounted;
 using mstd::refcount_ptr;
 using mstd::take_or_copy;
