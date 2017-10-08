@@ -34,3 +34,16 @@ add_custom_target(update-tests
 	DEPENDS conftaal-test
 	USES_TERMINAL
 )
+
+# Install libraries.
+include(GNUInstallDirs)
+install(TARGETS conftaal-parser EXPORT ${PROJECT_NAME}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+# Install CMake configuration files.
+configure_file(config.cmake.in ${PROJECT_NAME}-config.cmake @ONLY)
+set(CMAKE_INSTALL_CMAKEDIR "lib/cmake/${PROJECT_NAME}" CACHE PATH "CMake project files")
+install(EXPORT ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_CMAKEDIR} NAMESPACE ${PROJECT_NAME}::)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
