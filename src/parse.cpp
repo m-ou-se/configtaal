@@ -397,7 +397,7 @@ std::unique_ptr<Expression> Parser::parse_number() {
 			"floating point literals must be in decimal or hexadecimal, not in octal",
 			literal_source
 		);
-		return std::make_unique<DoubleLiteralExpression>(std::strtod(literal_source.to_string().data(), nullptr));
+		return std::make_unique<DoubleLiteralExpression>(std::strtod(std::string(literal_source).data(), nullptr));
 	}
 }
 
