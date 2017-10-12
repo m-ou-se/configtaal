@@ -25,12 +25,17 @@ add_library(conftaal-parse
 )
 target_link_libraries(conftaal-parse mstd stringpool::string_tracker)
 
+add_library(conftaal-evaluate
+	src/evaluate.cpp
+)
+target_link_libraries(conftaal-evaluate conftaal-parse)
+
 add_custom_target(check)
 add_subdirectory(test/parse)
 
 # Install libraries.
 include(GNUInstallDirs)
-install(TARGETS conftaal-parse EXPORT ${PROJECT_NAME}
+install(TARGETS conftaal-parse conftaal-evaluate EXPORT ${PROJECT_NAME}
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
