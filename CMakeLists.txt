@@ -18,33 +18,19 @@ if (NOT TARGET stringpool::string_pool)
 	find_package(stringpool)
 endif()
 
-add_library(conftaal-parser
+add_library(conftaal-parse
 	src/operator.cpp
 	src/parse.cpp
 	src/print_error.cpp
 )
-target_link_libraries(conftaal-parser mstd stringpool::string_tracker)
+target_link_libraries(conftaal-parse mstd stringpool::string_tracker)
 
-add_executable(conftaal-test
-	src/test.cpp
-)
-target_link_libraries(conftaal-test conftaal-parser)
-
-add_custom_target(check
-	COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "$<TARGET_FILE:conftaal-test>"
-	DEPENDS conftaal-test
-	USES_TERMINAL
-)
-
-add_custom_target(update-tests
-	COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "--update-expected" "$<TARGET_FILE:conftaal-test>"
-	DEPENDS conftaal-test
-	USES_TERMINAL
-)
+add_custom_target(check)
+add_subdirectory(test/parse)
 
 # Install libraries.
 include(GNUInstallDirs)
-install(TARGETS conftaal-parser EXPORT ${PROJECT_NAME}
+install(TARGETS conftaal-parse EXPORT ${PROJECT_NAME}
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
