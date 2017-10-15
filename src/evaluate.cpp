@@ -37,7 +37,7 @@ Value Engine::evaluateOperator(refcount_ptr<OperatorExpression const> expr, Cont
 	// Binary operators.
 	if (expr->lhs) {
 		Value lhs = evaluate(expr->lhs, context);
-		Value rhs = evaluate(expr->lhs, context);
+		Value rhs = evaluate(expr->rhs, context);
 		auto i = binary_ops.find({expr->op, lhs.type(), rhs.type()});
 		if (i == binary_ops.end()) throw EvaluateError("operator " + std::string{expr->op_source} + " not defined for given types");
 		return i->second(lhs, rhs);
