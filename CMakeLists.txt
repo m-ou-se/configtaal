@@ -27,6 +27,7 @@ target_link_libraries(conftaal-parse mstd stringpool::string_tracker)
 
 add_library(conftaal-evaluate
 	src/evaluate.cpp
+	src/value.cpp
 )
 target_link_libraries(conftaal-evaluate conftaal-parse)
 

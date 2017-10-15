@@ -42,6 +42,8 @@ public:
 
 	std::vector<Object> prelude;
 
+	Engine();
+
 	template<typename R, typename T1, typename T2> void addBinaryOp(Operator op, R (*f) (T1 const &, T2 const &));
 	template<typename T1, typename T2, typename F> void addBinaryOp(Operator op, F f);
 

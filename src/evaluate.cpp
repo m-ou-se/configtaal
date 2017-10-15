@@ -2,16 +2,8 @@
 
 namespace conftaal {
 
-bool ValueLess::operator() (Value const & a, Value const & b) {
-	if (a.type() < b.type()) return true;
-	if (a.type() > b.type()) return false;
-	auto i = engine->binary_ops.find({Operator::less, a.type(), b.type()});
-	if (i == engine->binary_ops.end()) throw EvaluateError("can not compare values");
-
-	Value result = i->second(a, b);
-	if (auto r = result.as<        bool>()) return *r;
-	if (auto r = result.as<std::int64_t>()) return *r;
-	throw EvaluateError("comparing values did not result in a boolean value");
+Engine::Engine() {
+	imbueDefaultPrelude(*this);
 }
 
 Value Engine::evaluate(refcount_ptr<Expression const> expr) const {
@@ -95,6 +87,81 @@ Engine::Object Engine::evaluate(refcount_ptr<ObjectExpression const> expr, Conte
 
 }
 
-void imbueDefaultPrelude(Engine & engine);
+template<Operator op, typename T1, typename T2>
+auto default_binary_op(T1 const & a, T2 const & b) {
+	if constexpr(op == Operator::equal)                   return a == b;
+	else if constexpr(op == Operator::inequal)            return a != b;
+	else if constexpr(op == Operator::greater)            return a > b;
+	else if constexpr(op == Operator::less)               return a < b;
+	else if constexpr(op == Operator::greater_or_equal)   return a >= b;
+	else if constexpr(op == Operator::less_or_equal)      return a <= b;
+
+	else if constexpr(op == Operator::plus)    return a + b;
+	else if constexpr(op == Operator::minus)   return a - b;
+	else if constexpr(op == Operator::times)   return a * b;
+	else if constexpr(op == Operator::divide)  return a / b;
+	else if constexpr(op == Operator::modulo)  return a % b;
+	// can't do power
+
+	else if constexpr(op == Operator::left_shift)  return a << b;
+	else if constexpr(op == Operator::right_shift) return a >> b;
+	else if constexpr(op == Operator::bit_and)     return a &  b;
+	else if constexpr(op == Operator::bit_or)      return a |  b;
+	else if constexpr(op == Operator::bit_xor)     return a ^  b;
+	else if constexpr(op == Operator::logical_and) return a && b;
+	else if constexpr(op == Operator::logical_or)  return a || b;
+
+	else static_assert(op != op, "specified operator can not be delegated to C++ default");
+}
+
+template<Operator Op, typename T1, typename T2 = T1>
+void delegateBinaryOp(Engine & engine) {
+	engine.addBinaryOp<T1, T2>(Op, default_binary_op<Op, T1, T2>);
+}
+
+template<typename T1, typename T2, Operator... Ops>
+void delegateBinaryOps(Engine & engine) {
+	(delegateBinaryOp<Ops, T1, T2>(engine), ...);
+}
+
+template<typename T1, typename T2, Operator... Ops>
+void delegateMixedBinaryOps(Engine & engine) {
+	delegateBinaryOps<T1, T2, Ops...>(engine);
+	delegateBinaryOps<T2, T1, Ops...>(engine);
+}
+
+void imbueDefaultPrelude(Engine & engine) {
+	using Op = Operator;
+
+	delegateBinaryOps<std::int64_t, std::int64_t,
+		Op::equal, Op::inequal, Op::greater, Op::less, Op::greater_or_equal, Op::less_or_equal,
+		Op::plus, Op::minus, Op::times, Op::divide, Op::modulo,
+		Op::left_shift, Op::right_shift, Op::bit_and, Op::bit_or, Op::bit_xor,
+		Op::logical_and, Op::logical_or
+	>(engine);
+
+	// TODO: Power
+
+	delegateBinaryOps<double, double,
+		Op::equal, Op::inequal, Op::greater, Op::less, Op::greater_or_equal, Op::less_or_equal,
+		Op::plus, Op::minus, Op::times, Op::divide,
+		Op::logical_and, Op::logical_or
+	>(engine);
+
+	// TODO: Power, Modulo
+
+	delegateMixedBinaryOps<double, std::int64_t,
+		Op::equal, Op::inequal, Op::greater, Op::less, Op::greater_or_equal, Op::less_or_equal,
+		Op::plus, Op::minus, Op::times, Op::divide,
+		Op::logical_and, Op::logical_or
+	>(engine);
+
+	// TODO: Power, Modulo
+
+	delegateBinaryOps<std::string, std::string,
+		Op::equal, Op::inequal, Op::greater, Op::less, Op::greater_or_equal, Op::less_or_equal,
+		Op::plus
+	>(engine);
+}
 
 }
