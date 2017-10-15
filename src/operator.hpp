@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 namespace conftaal {
 
@@ -31,6 +32,8 @@ enum class Operator {
 	/* && */ logical_and,
 	/* || */ logical_or
 };
+
+std::string to_string(Operator);
 
 enum class order {
 	left,
