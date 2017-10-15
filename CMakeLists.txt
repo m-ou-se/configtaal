@@ -33,6 +33,7 @@ target_link_libraries(conftaal-evaluate conftaal-parse)
 
 add_custom_target(check)
 add_subdirectory(test/parse)
+add_subdirectory(test/evaluate)
 
 # Install libraries.
 include(GNUInstallDirs)
