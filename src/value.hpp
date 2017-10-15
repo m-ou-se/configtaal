@@ -8,6 +8,17 @@
 
 namespace conftaal {
 
+struct TypeInfo : std::type_index {
+	std::string name() const;
+
+	TypeInfo(std::type_index t) : std::type_index{t} {}
+
+	template<typename T>
+	static TypeInfo of() noexcept {
+		return std::type_index{typeid(T)};
+	}
+};
+
 namespace detail {
 	template<typename T> struct ValueImpl;
 
@@ -20,6 +31,8 @@ namespace detail {
 
 		template<typename T> ValueImpl<T>       * unchecked()       { return static_cast<ValueImpl<T>       *>(this); }
 		template<typename T> ValueImpl<T> const * unchecked() const { return static_cast<ValueImpl<T> const *>(this); }
+
+		virtual TypeInfo type() const noexcept = 0;
 	};
 
 	template<typename T>
@@ -34,6 +47,10 @@ namespace detail {
 
 		std::unique_ptr<ValueBase> clone() override {
 			return std::make_unique<ValueImpl>(value);
+		}
+
+		TypeInfo type() const noexcept override {
+			return TypeInfo::of<T>();
 		}
 	};
 
@@ -57,6 +74,7 @@ namespace detail {
 		return std::make_unique<ValueImpl<T>>(std::in_place, std::forward<Args>(args)...);
 	}
 }
+
 
 /// Class capable of holding almost any type of object.
 /**
@@ -84,10 +102,6 @@ public:
 	/// Construct a value from any compatible object.
 	template<typename T>
 	explicit Value(T && val) : value_{detail::wrap_value(std::forward<T>(val))} {}
-
-	/// Get the type index used for the specified type.
-	template<typename T>
-	static std::type_index type_of() noexcept { return {typeid(T *)}; }
 
 	/// Swap the contents of two values.
 	void swap(Value & other) noexcept { value_.swap(other.value_); }
@@ -126,7 +140,7 @@ public:
 	template<typename T> T const & unchecked() const noexcept { return value_->unchecked<T>()->value; }
 
 	/// Get the type index associated with the currently held object.
-	std::type_index type() const noexcept { return std::type_index(typeid(value_.get())); }
+	TypeInfo type() const noexcept { return value_->type(); }
 };
 
 /// Make a value using in-place construction of the underlying object.
