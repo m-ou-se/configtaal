@@ -80,10 +80,11 @@ Engine::Object Engine::evaluateObject(refcount_ptr<ObjectExpression const> expr,
 
 	// Evaluate values and add them to the object.
 	for (std::size_t i = 0; i < expr->keys->elements.size(); ++i) {
-		result.insert({
+		auto insertion = result.insert({
 			*keys[i].as_ptr<std::string>(), // already checked that it is a string above
 			evaluate(expr->values->elements[i], context),
 		});
+		if (!insertion.second) throw EvaluateError("duplicate key: " + *keys[i].as_ptr<std::string>());
 	}
 
 	// Pop the evaluated object from the context stack again.
