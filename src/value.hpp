@@ -15,15 +15,11 @@ namespace detail {
 		virtual std::unique_ptr<ValueBase> clone() = 0;
 		~ValueBase() {}
 
-		template<typename T>
-		ValueImpl<T> * cast() {
-			return dynamic_cast<ValueImpl<T> *>(this);
-		}
+		template<typename T> ValueImpl<T>       * cast()       { return dynamic_cast<ValueImpl<T>       *>(this); }
+		template<typename T> ValueImpl<T> const * cast() const { return dynamic_cast<ValueImpl<T> const *>(this); }
 
-		template<typename T>
-		ValueImpl<T> const * cast() const {
-			return dynamic_cast<ValueImpl<T> const *>(this);
-		}
+		template<typename T> ValueImpl<T>       * unchecked()       { return static_cast<ValueImpl<T>       *>(this); }
+		template<typename T> ValueImpl<T> const * unchecked() const { return static_cast<ValueImpl<T> const *>(this); }
 	};
 
 	template<typename T>
@@ -124,6 +120,10 @@ public:
 
 	/// Check if the value holds an object of the specified type.
 	template<typename T> bool is() const noexcept { return as_ptr<T>() != nullptr; }
+
+	/// Convert the value to the wanted type without checking.
+	template<typename T> T       & unchecked()       noexcept { return value_->unchecked<T>()->value; }
+	template<typename T> T const & unchecked() const noexcept { return value_->unchecked<T>()->value; }
 
 	/// Get the type index associated with the currently held object.
 	std::type_index type() const noexcept { return std::type_index(typeid(value_.get())); }
