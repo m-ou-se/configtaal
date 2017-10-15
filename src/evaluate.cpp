@@ -16,15 +16,15 @@ Value Engine::evaluate(refcount_ptr<Expression const> expr) const {
 }
 
 Value Engine::evaluate(refcount_ptr<Expression const> expr, ContextStack & context) const {
-	if (auto e = dynamic_pointer_cast<IdentifierExpression const>(expr)) return evaluate(std::move(e), context);
-	if (auto e = dynamic_pointer_cast<  OperatorExpression const>(expr)) return evaluate(std::move(e), context);
-	if (auto e = dynamic_pointer_cast<   LiteralExpression const>(expr)) return evaluate(std::move(e), context);
-	if (auto e = dynamic_pointer_cast<      ListExpression const>(expr)) return Value{evaluate(std::move(e), context)};
-	if (auto e = dynamic_pointer_cast<    ObjectExpression const>(expr)) return Value{evaluate(std::move(e), context)};
+	if (auto e = dynamic_pointer_cast<IdentifierExpression const>(expr)) return evaluateIdentifier(std::move(e), context);
+	if (auto e = dynamic_pointer_cast<  OperatorExpression const>(expr)) return evaluateOperator(std::move(e), context);
+	if (auto e = dynamic_pointer_cast<   LiteralExpression const>(expr)) return evaluateLiteral(std::move(e));
+	if (auto e = dynamic_pointer_cast<      ListExpression const>(expr)) return Value{evaluateList(std::move(e), context)};
+	if (auto e = dynamic_pointer_cast<    ObjectExpression const>(expr)) return Value{evaluateObject(std::move(e), context)};
 	throw EvaluateError("unknown expression type");
 }
 
-Value Engine::evaluate(refcount_ptr<IdentifierExpression const> expr, ContextStack & context) const {
+Value Engine::evaluateIdentifier(refcount_ptr<IdentifierExpression const> expr, ContextStack & context) const {
 	std::string key{expr->identifier};
 	for (auto object = context.rbegin(); object != context.rend(); ++object) {
 		auto i = (*object)->find(key);
@@ -33,7 +33,7 @@ Value Engine::evaluate(refcount_ptr<IdentifierExpression const> expr, ContextSta
 	throw EvaluateError{"could not resolve identifier: " + key};
 }
 
-Value Engine::evaluate(refcount_ptr<OperatorExpression const> expr, ContextStack & context) const {
+Value Engine::evaluateOperator(refcount_ptr<OperatorExpression const> expr, ContextStack & context) const {
 	// Binary operators.
 	if (expr->lhs) {
 		Value lhs = evaluate(expr->lhs, context);
@@ -51,14 +51,14 @@ Value Engine::evaluate(refcount_ptr<OperatorExpression const> expr, ContextStack
 	}
 }
 
-Value Engine::evaluate(refcount_ptr<LiteralExpression const> expr) const {
+Value Engine::evaluateLiteral(refcount_ptr<LiteralExpression const> expr) const {
 	if (auto e = dynamic_pointer_cast<IntegerLiteralExpression const>(expr)) return Value{e->value};
 	if (auto e = dynamic_pointer_cast< DoubleLiteralExpression const>(expr)) return Value{e->value};
 	if (auto e = dynamic_pointer_cast< StringLiteralExpression const>(expr)) return Value{e->value};
 	throw EvaluateError("unknown literal type");
 }
 
-Engine::List Engine::evaluate(refcount_ptr<ListExpression const> expr, ContextStack & context) const {
+Engine::List Engine::evaluateList(refcount_ptr<ListExpression const> expr, ContextStack & context) const {
 	List result;
 	result.reserve(expr->elements.size());
 	for (refcount_ptr<Expression const> const & elem : expr->elements) {
@@ -67,21 +67,26 @@ Engine::List Engine::evaluate(refcount_ptr<ListExpression const> expr, ContextSt
 	return result;
 }
 
-Engine::Object Engine::evaluate(refcount_ptr<ObjectExpression const> expr, ContextStack & context) const {
+Engine::Object Engine::evaluateObject(refcount_ptr<ObjectExpression const> expr, ContextStack & context) const {
 	// Evaluate keys first, so we don't lookup parts of keys in the object itself.
-	List keys = evaluate(expr->keys, context);
+	List keys = evaluateList(expr->keys, context);
 	for (std::size_t i = 0; i < expr->keys->elements.size(); ++i) {
 		if (!keys[i].is<std::string>()) throw EvaluateError("key is not a string");
 	}
 
+	// Evaluate values in modified context, so they can refer to already-evaluated parts of the object itself.
 	Object result;
 	context.push_back(&result);
+
+	// Evaluate values and add them to the object.
 	for (std::size_t i = 0; i < expr->keys->elements.size(); ++i) {
 		result.insert({
 			*keys[i].as_ptr<std::string>(), // already checked that it is a string above
 			evaluate(expr->values->elements[i], context),
 		});
 	}
+
+	// Pop the evaluated object from the context stack again.
 	context.pop_back();
 	return result;
 

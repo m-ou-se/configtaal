@@ -63,13 +63,13 @@ public:
 	Value evaluate(refcount_ptr<Expression const> expr, ContextStack & context) const;
 
 protected:
-	Value evaluate(refcount_ptr<IdentifierExpression const> expr, ContextStack & context) const;
-	Value evaluate(refcount_ptr<OperatorExpression const> expr, ContextStack & context) const;
+	Value evaluateIdentifier(refcount_ptr<IdentifierExpression const> expr, ContextStack & context) const;
+	Value evaluateOperator(refcount_ptr<OperatorExpression const> expr, ContextStack & context) const;
 
-	Value evaluate(refcount_ptr<LiteralExpression const> expr) const;
+	Value evaluateLiteral(refcount_ptr<LiteralExpression const> expr) const;
 
-	List evaluate(refcount_ptr<ListExpression const> expr, ContextStack & context) const;
-	Object evaluate(refcount_ptr<ObjectExpression const> expr, ContextStack & context) const;
+	List evaluateList(refcount_ptr<ListExpression const> expr, ContextStack & context) const;
+	Object evaluateObject(refcount_ptr<ObjectExpression const> expr, ContextStack & context) const;
 };
 
 void imbueDefaultPrelude(Engine & engine);
