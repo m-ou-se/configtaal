@@ -44,20 +44,14 @@ public:
 
 	Engine();
 
-	template<typename R, typename T1, typename T2> void addBinaryOp(Operator op, R (*f) (T1 const &, T2 const &));
+	template<typename R, typename T1, typename T2> void addBinaryOp(Operator op, R (*f) (T1, T2));
 	template<typename T1, typename T2, typename F> void addBinaryOp(Operator op, F f);
 
-	template<typename R, typename T> void addUnaryOp(Operator op, R (*f) (T const &));
+	template<typename R, typename T> void addUnaryOp(Operator op, R (*f) (T));
 	template<typename T, typename F> void addUnaryOp(Operator op, F f);
 
 	template<typename F, typename... Args> void addFunction(std::string name, F f);
 	template<typename R, typename... Args> void addFunction(std::string name, R (*) (Args...));
-
-	std::optional<BinaryOp> findBinaryOp(Operator op, std::type_index a, std::type_index b) const;
-	std::optional<BinaryOp> findBinaryOp(Operator op, Value const & a, Value const & b) const;
-	std::optional<BinaryOp> findUnaryOp(Operator op, std::type_index a, std::type_index b) const;
-	std::optional<BinaryOp> findUnaryOp(Operator op, Value const & a, Value const & b) const;
-	std::optional<Function> findFunction(std::string_view name) const;
 
 	Value evaluate(refcount_ptr<Expression const> expr) const;
 	Value evaluate(refcount_ptr<Expression const> expr, ContextStack & context) const;
@@ -75,32 +69,32 @@ protected:
 void imbueDefaultPrelude(Engine & engine);
 
 template<typename R, typename T1, typename T2>
-void Engine::addBinaryOp(Operator op, R (*f) (T1 const &, T2 const &)) {
-	binary_ops.insert({{op, Value::type_of<T1>(), Value::type_of<T2>()}, [f] (Value const & a, Value const & b) -> Value {
-		return f(*a.as_ptr<T1>(), *b.as_ptr<T2>());
+void Engine::addBinaryOp(Operator op, R (*f) (T1, T2)) {
+	binary_ops.insert({{op, TypeInfo::of<std::decay_t<T1>>(), TypeInfo::of<std::decay_t<T2>>()}, [f] (Value const & a, Value const & b) {
+		return Value{f(a.unchecked<T1>(), b.unchecked<T2>())};
 	}});
 }
 
 template<typename T1, typename T2, typename F>
 void Engine::addBinaryOp(Operator op, F f) {
 	static_assert(std::is_invocable_v<F, T1, T2>, "Given functor can not be invoked with specified arguments.");
-	binary_ops.insert({{op, Value::type_of<T1>(), Value::type_of<T2>()}, [f = std::forward<F>(f)] (Value const & a, Value const & b) -> Value {
-		return std::invoke(f, *a.as_ptr<T1>(), *b.as_ptr<T2>());
+	binary_ops.insert({{op, TypeInfo::of<T1>(), TypeInfo::of<T2>()}, [f = std::forward<F>(f)] (Value const & a, Value const & b) {
+		return Value{std::invoke(f, a.unchecked<T1>(), b.unchecked<T2>())};
 	}});
 }
 
 template<typename R, typename T>
-void Engine::addUnaryOp(Operator op, R (*f) (T const &)) {
-	unary_ops.insert({op, Value::type_of<T>(), [f] (Value const & value) -> Value {
-		return f(*value.as_ptr<T>());
+void Engine::addUnaryOp(Operator op, R (*f) (T)) {
+	unary_ops.insert({op, TypeInfo::of<std::decay_t<T>>(), [f] (Value const & value) {
+		return Value{f(value.unchecked<T>())};
 	}});
 }
 
 template<typename T, typename F>
 void Engine::addUnaryOp(Operator op, F f) {
 	static_assert(std::is_invocable_v<F, T>, "Given functor can not be invoked with specified arguments.");
-	unary_ops.insert({op, Value::type_of<T>(), [f = std::forward<F>(f)] (Value const & value) -> Value {
-		return std::invoke(f, *value.as_ptr<T>());
+	unary_ops.insert({op, TypeInfo::of<T>(), [f = std::forward<F>(f)] (Value const & value) {
+		return Value{std::invoke(f, value.unchecked<T>())};
 	}});
 }
 
@@ -108,7 +102,7 @@ namespace detail {
 	template<typename T, std::size_t I>
 	T convert(Value const & value) {
 		T const * p = value.as_ptr<T>();
-		if (!p) throw EvaluateError("wrong type for argument " + std::to_string(I));
+		if (!p) throw EvaluateError("type mismatch for argument " + std::to_string(I));
 		return *p;
 	}
 
