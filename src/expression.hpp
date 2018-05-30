@@ -3,16 +3,16 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <string_view>
 #include <vector>
 
-#include <mstd/string_view.hpp>
 #include <mstd/refcount.hpp>
 
 #include "operator.hpp"
 
 namespace conftaal {
 
-using mstd::string_view;
+using std::string_view;
 using mstd::refcounted;
 using mstd::refcount_ptr;
 using mstd::take_or_copy;

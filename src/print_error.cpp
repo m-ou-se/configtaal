@@ -1,12 +1,11 @@
 #include <iostream>
 #include <string>
+#include <string_view>
 
-#include <mstd/string_view.hpp>
 #include <string_tracker.hpp>
 
 #include "print_error.hpp"
 
-using mstd::string_view;
 using string_pool::string_tracker;
 
 namespace conftaal {
@@ -47,7 +46,7 @@ void print_source_snippet(string_tracker::get_result const & src, string_tracker
 	}
 }
 
-void print_message(string_view message, string_tracker const & tracker, string_view where, bool color, bool error) {
+void print_message(std::string_view message, string_tracker const & tracker, std::string_view where, bool color, bool error) {
 	auto bad_src = tracker.get(where);
 	if (color) std::clog << "\033[1m";
 	if (bad_src.location) std::clog << bad_src.location << ": ";
