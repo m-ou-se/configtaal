@@ -24,22 +24,25 @@ add_library(conftaal-parser
 )
 target_link_libraries(conftaal-parser mstd stringpool::string_tracker)
 
-add_executable(conftaal-test
-	src/test.cpp
-)
-target_link_libraries(conftaal-test conftaal-parser)
+get_directory_property(parent PARENT_DIRECTORY)
+if (NOT parent)
+	add_executable(conftaal-test
+		src/test.cpp
+	)
+	target_link_libraries(conftaal-test conftaal-parser)
 
-add_custom_target(check
-	COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "$<TARGET_FILE:conftaal-test>"
-	DEPENDS conftaal-test
-	USES_TERMINAL
-)
+	add_custom_target(check
+		COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "$<TARGET_FILE:conftaal-test>"
+		DEPENDS conftaal-test
+		USES_TERMINAL
+	)
 
-add_custom_target(update-tests
-	COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "--update-expected" "$<TARGET_FILE:conftaal-test>"
-	DEPENDS conftaal-test
-	USES_TERMINAL
-)
+	add_custom_target(update-tests
+		COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/test/test" "--update-expected" "$<TARGET_FILE:conftaal-test>"
+		DEPENDS conftaal-test
+		USES_TERMINAL
+	)
+endif()
 
 # Install libraries.
 include(GNUInstallDirs)
