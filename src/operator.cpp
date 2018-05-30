@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstdlib>
 
 #include "operator.hpp"
 
@@ -47,7 +48,7 @@ int get_precedence(Operator op) {
 		case Operator::logical_or:
 			return 14;
 	}
-	assert(false);
+	std::abort();
 }
 
 order get_associativity(int precedence) {

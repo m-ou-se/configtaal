@@ -417,7 +417,7 @@ Operator unary_operator(string_view op) {
 		case '!': return Operator::logical_not;
 		case '~': return Operator::complement;
 	}
-	assert(false);
+	std::abort();
 }
 
 Operator binary_operator(string_view op) {
@@ -458,7 +458,7 @@ Operator binary_operator(string_view op) {
 			if (op.size() > 1 && op[1] == '|') return Operator::logical_or;
 			return Operator::bit_or;
 	}
-	assert(false);
+	std::abort();
 }
 
 }
