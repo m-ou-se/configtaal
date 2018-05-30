@@ -661,7 +661,7 @@ std::unique_ptr<ListExpression> Parser::parse_list(Matcher const & end) {
 	while (true) {
 		char const * expression_begin = source_.data();
 		if (parse_end(end)) break;
-		auto value = parse_expression(Matcher(",").or_before(end));
+		auto value = parse_expression(Matcher(MatchMode::object_element).or_before(end));
 		if (!value) throw ParseError(
 			"missing expression",
 			string_view(expression_begin, source_.data() - expression_begin + 1)
